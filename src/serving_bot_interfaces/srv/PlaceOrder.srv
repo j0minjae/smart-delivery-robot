@@ -1,0 +1,4 @@
+uint32 table_id
+Order[] orders
+---
+bool success
