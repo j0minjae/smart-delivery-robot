@@ -7,21 +7,21 @@ from geometry_msgs.msg import Point, PoseStamped, Quaternion, Pose
 from serving_bot_interfaces.srv import PlaceOrder
 from PyQt5.QtWidgets import QApplication
 import math
+from threading import Thread
 from unit_ui import OrderUI
 from unit_log import log
 from unit_db import DB
 
 class gui(Node):
 
-    def __init__(self, ui_instance, log_instance, db_instance):
+    def __init__(self):
         super().__init__('gui')
 
-        self.order_service = self.create_service(PlaceOrder,'order', self.order_callback)
+        self.order_service = self.create_service(PlaceOrder,'/order', self.order_callback)
         self.log_sub = self.create_subscription(Log, '/rosout', self.log_callback, 10)
         self.send_menu = ActionClient(self,NavigateToPose, 'navigate_to_pose')
-        self.ui = ui_instance
-        self.log = log_instance
-        self.db = db_instance
+        # self.log = log_instance
+        # self.db = db_instance
 
         self.locate_tables = {
             '1': Pose(position = Point(x=1.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
@@ -35,7 +35,8 @@ class gui(Node):
             '9': Pose(position = Point(x=3.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
             'home': Pose(position = Point(x=0.0, y=0.0),orientation = self.euler_to_quaternion(0, 0, 0))
         }
-        
+        print('check')
+
     def euler_to_quaternion(self, roll, pitch, yaw):
         # Convert Euler angles to a quaternion
         qx = math.sin(roll / 2) * math.cos(pitch / 2) * math.cos(yaw / 2) - math.cos(roll / 2) * math.sin(pitch / 2) * math.sin(yaw / 2)
@@ -45,32 +46,36 @@ class gui(Node):
         return Quaternion(x=qx, y=qy, z=qz, w=qw)
 
     def log_callback(self, msg):
-        log = self.log.update_log(msg)
-        self.ui.update_log(log)
+        # log = self.log.update_log(msg)
+        print(msg)
 
     def order_callback(self, request, respone):
+        self.get_logger().info(f'check')
         table_id = request.table_id
-        order = request.order
+        orders = request.orders
         respone.msg = '주문이 완료되었습니다.'
-        self.ui.update_order_data(table_id, order)
-        self.send_db(table_id, order)
+        print(table_id, orders)
+        # self.send_db(table_id, orders)
 
         if str(table_id) in self.locate_tables:
             target_pose = str(table_id)
-            movement = PoseStamped()
-            movement.header.frame_id = 'map'  # SLAM에서 사용되는 좌표계 (보통 'map' 프레임)
-            movement.header.stamp = self.get_clock().now().to_msg()
-            movement.pose.position.x = target_pose.position.x
-            movement.pose.position.y = target_pose.position.y
-            movement.pose.orientation = target_pose.orientation
-            self._action_client.wait_for_server()
-            self.get_logger().info(f'complete to serve')
-            self._action_client.send_goal_async(
-                movement,
-                feedback_callback=self.feedback_callback
-            ).add_done_callback(self.goal_response_callback)
+            self.movement(target_pose)
         return respone
     
+    def movement(self, target_pose):
+        movement = PoseStamped()
+        movement.header.frame_id = 'map'  # SLAM에서 사용되는 좌표계 (보통 'map' 프레임)
+        movement.header.stamp = self.get_clock().now().to_msg()
+        movement.pose.position.x = target_pose.position.x
+        movement.pose.position.y = target_pose.position.y
+        movement.pose.orientation = target_pose.orientation
+        self._action_client.wait_for_server()
+        self.get_logger().info(f'complete to serve')
+        self._action_client.send_goal_async(
+            movement,
+            feedback_callback=self.feedback_callback
+        ).add_done_callback(self.goal_response_callback)
+
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
         self.get_logger().info(f"Current progress: {feedback.current_pose}")
@@ -88,21 +93,29 @@ class gui(Node):
         self.get_logger().info(f'Result: {result}')
         rclpy.shutdown()
 
-    def send_db(self, table_id, order):
-        self.db.update_db(table_id, order)
+    # def send_db(self, table_id, orders):
+    #     self.db.update_db(table_id, orders)
 
 
+# def run_ros(node):
+#     rclpy.spin(node)
 
+# def run_ui(ui_instance, app):
+#     ui_instance.show()
+#     app.exec_()
+    
 def main(args=None):
     rclpy.init(args=args)
-    app = QApplication([])
-    ui_instance = OrderUI()
-    log_instance = log()
-    db_instance = DB()
-    node = gui(ui_instance, log_instance, db_instance)
-    ui_instance.show()
-    app.exec_()
+    # app = QApplication([])
+    # ui_instance = OrderUI()
+    # log_instance = log()
+    # db_instance = DB()
+    node = gui()
     rclpy.spin(node)
+    # threading = Thread(target=run_ros, args=[node,], daemon=True)
+    # threading.start()
+    # run_ui(ui_instance, app)
+    node.destroy_node()
     rclpy.shutdown()
 
 

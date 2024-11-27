@@ -16,13 +16,15 @@ class OrderUI(QWidget):
         self.setLayout(layout)
         
         # 버튼 클릭 시 동작 연결
-        self.button.clicked.connect(self.update_order_data)
+        self.button.clicked.connect(self.update_menu)
 
-    def update_order_data(self, table_id, order):
-        # 여기에 'order' 노드에서 데이터를 받아오는 로직을 작성
+    def update_order_data(self, table_id, orders):
+        # 여기에 'orders' 노드에서 데이터를 받아오는 로직을 작성
         # 예시: self.receive_data_from_order({"order_id": 123, "status": "Completed"})
-        order_data = {"table number": {table_id}, "menu": {order}}
-        self.receive_data_from_order(order_data)
+        self.order_data = {"table number": {table_id}, "menu": {orders.menu_id}}
+
+    def update_menu(self):
+        self.receive_data_from_order(self.order_data)
 
     def receive_data_from_order(self, order_data):
         """ order 데이터 처리 및 UI 업데이트 """
