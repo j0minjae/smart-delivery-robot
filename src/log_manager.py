@@ -26,6 +26,7 @@ class LogManager:
             VALUES (?, ?, ?, ?);
         ''', (time_stamp, node_name, log_level, message))
         self.conn.commit()
+        
         print(f"Log saved: {time_stamp} - {node_name} - {log_level} - {message}")
 
     def close_connection(self):
