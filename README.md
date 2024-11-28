@@ -23,3 +23,4 @@ sqlite> SELECT * FROM orders; # 터미널 1
 sqlite> SELECT * FROM logs; # 터미널 2
 sqlite3 SELECT * FROM menu; # 터미널3
 sqlite> .quit # sqlite 종료
+
