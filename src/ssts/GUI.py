@@ -6,7 +6,7 @@ from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import Point, PoseStamped, Quaternion, Pose
 from serving_bot_interfaces.srv import PlaceOrder
 import math
-from db_management import LogManager, OrderManager
+from db_management import OrderManager
 
 
 class gui(Node):
