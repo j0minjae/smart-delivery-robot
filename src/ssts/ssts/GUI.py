@@ -6,16 +6,14 @@ from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import Point, PoseStamped, Quaternion, Pose
 from serving_bot_interfaces.srv import PlaceOrder
 import math
-from ssts.log_manager import LogManager
-from ssts.order_manager import OrderManager
+from ssts.database_manager import OrderManager
 
 
 class gui(Node):
 
-    def __init__(self, log_instance, db_instance):
+    def __init__(self, db_instance):
         super().__init__('gui')
 
-        self.log = log_instance
         self.db = db_instance
 
         self.order_service = self.create_service(PlaceOrder,'/order', self.order_callback)
@@ -44,8 +42,8 @@ class gui(Node):
         return Quaternion(x=qx, y=qy, z=qz, w=qw)
 
     def log_callback(self, msg):
-        # log = self.log.update_log(msg)
-        print(msg)
+        self.db.update_log(msg)
+        
 
     def order_callback(self, request, respone):
         self.get_logger().info(f'check')
@@ -90,6 +88,9 @@ class gui(Node):
     def get_result_callback(self, future):
         result = future.result().result
         self.get_logger().info(f'Result: {result}')
+
+    def call_log(self):
+        return self.db.call_log()
         
 
 
@@ -105,9 +106,8 @@ def main(args=None):
     rclpy.init(args=args)
     # app = QApplication([])
     # ui_instance = OrderUI()
-    log_instance = LogManager()
     db_instance = OrderManager()
-    node = gui(log_instance, db_instance)
+    node = gui(db_instance)
     rclpy.spin(node)
     # threading = Thread(target=run_ros, args=[node,], daemon=True)
     # threading.start()
