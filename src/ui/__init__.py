@@ -1,0 +1,1 @@
+from .kitchen_display.app import MainWindow
