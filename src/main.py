@@ -10,7 +10,7 @@ class ROS2Thread(QThread):
     def __init__(self, node):
         super().__init__()
         self.node = node
-        
+
     def run(self):
         # ROS2 spin을 별도의 스레드에서 실행
         rclpy.spin(self.node)
@@ -25,10 +25,9 @@ def main(args=None):
     app = QApplication(sys.argv)
     main_window = MainWindow()
 
-    log_instance = LogManager()
     db_instance = OrderManager()
     
-    node = gui(log_instance, db_instance)
+    node = gui(db_instance)
 
     #ros2 thread 실행
     ros2_thread = ROS2Thread(node)
