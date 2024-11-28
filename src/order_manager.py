@@ -44,6 +44,48 @@ class OrderManager:
     def close_connection(self):
         self.conn.close()
         print("Database connection closed.")
+    
+    # 테이블: 메뉴구성
+    def get_and_insert_order(self):
+        # 메뉴 개수 만큼 order 저장 (manu_id, manu_name, menu_price)
+         # 메뉴와 가격 정보
+        menu = {
+            '로스카츠': 10000, 
+            '히레카츠': 11000,
+            '모둠카츠': 12000
+        }
+            
+        
+        for food_data in menu.items():
+            menu_name = food_data.key()
+            menu_price = food_data.value()
+
+            self.conn = sqlite3.connect('database/menu.db')  # SQLite DB 연결
+            self.cursor = self.conn.cursor()
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS orders (
+                    menu_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    menu_name TEXT,
+                    menu_price TEXT
+                );
+            ''')
+            self.conn.commit()
+            print("Table created (if it did not exist).")
+
+            self.cursor.execute('''
+                INSERT INTO menu ( menu_id, menu_name, menu_price)
+                VALUES (?, ?);
+            ''', (menu_name, menu_price))
+        
+        self.conn.commit()
+        # order 저장 인포 로깅
+        print("Order saved to database.\n")
+        self.conn.close()
+        print("Database connection closed.")
+        
+    def close_connection(self):
+        self.conn.close()
+        print("Database connection closed.")
 
 # 통계: 지난 한 달간의 일일매출을 시각화(꺾은선 그래프)
 def generate_sales_graph():
@@ -83,17 +125,17 @@ def generate_sales_graph():
                     f'{row["Daily Sales (KRW in 10k)"]:.1f} (10k)', 
                     color='black', ha='center', va='bottom')  # va는 value 위치 설정 (위쪽, 아래쪽)
 
-        # 지난 한 달간의 기간 표시
-        plt.xlabel('Date')
-        plt.ylabel('Daily Sales (KRW in 10k)')
-        plt.title(f'Daily Sales for the Last Month ({one_month_ago_str} to {datetime.now().strftime("%Y-%m-%d")})')
-        plt.xticks(rotation=45)
-        plt.grid(True)
-        plt.tight_layout()
-        plt.show()
-    else:
-        # 데이터가 없으면 로그 메시지 출력
-        print("No sales data available for the last month.")
+    #     # 지난 한 달간의 기간 표시
+    #     plt.xlabel('Date')
+    #     plt.ylabel('Daily Sales (KRW in 10k)')
+    #     plt.title(f'Daily Sales for the Last Month ({one_month_ago_str} to {datetime.now().strftime("%Y-%m-%d")})')
+    #     plt.xticks(rotation=45)
+    #     plt.grid(True)
+    #     plt.tight_layout()
+    #     plt.show()
+    # else:
+    #     # 데이터가 없으면 로그 메시지 출력
+    #     print("No sales data available for the last month.")
     
     conn.close()
 
