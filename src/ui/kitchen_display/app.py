@@ -3,10 +3,10 @@ import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget
 from PyQt5.QtCore import pyqtSlot, QFile, QTextStream, Qt
 
-from widgets.main_ui import Ui_MainWindow
-from widgets.order_label_ui import Ui_order_label_container as Ui_Order_Label
-from widgets.order_ticket_ui import Ui_Form as Ui_Order_Ticket
-from widgets.table_info_ui import Ui_Form as Ui_Table_Info
+from .widgets.main_ui import Ui_MainWindow
+from .widgets.order_label_ui import Ui_order_label_container as Ui_Order_Label
+from .widgets.order_ticket_ui import Ui_Form as Ui_Order_Ticket
+from .widgets.table_info_ui import Ui_Form as Ui_Table_Info
 
 class SingleOrder:
     def __init__(self, menu_id, quantity):
