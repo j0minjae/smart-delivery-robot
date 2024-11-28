@@ -1,8 +1,11 @@
 import sys
+from datetime import datetime
 
+from DTO import TableInfo
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget
 from PyQt5.QtCore import pyqtSlot, QFile, QTextStream, Qt
 
+from .data_management import DataManager, TableManager
 from .widgets.main_ui import Ui_MainWindow
 from .widgets.order_label_ui import Ui_order_label_container as Ui_Order_Label
 from .widgets.order_ticket_ui import Ui_Form as Ui_Order_Ticket
@@ -29,14 +32,20 @@ class OrderLabel(QWidget):
         self.description.setText(description)
 
 class TableInfoWidget(QWidget):
-    def __init__(self):
+    def __init__(self, data_manager:TableManager=None):
         super().__init__()
+        self.data_manager = data_manager
+
         self.table_info_ui = Ui_Table_Info()
         self.table_info_ui.setupUi(self)
+
+        self.data_manager.table_update.connect(self.update_widget)
         
         self.table_num = self.table_info_ui.table_num
         self.first_order_time = self.table_info_ui.first_order_time
         self.total_amount = self.table_info_ui.total_amount
+
+        self.data_manager.update_table()
 
     def set_table_num(self, table_num):
         self.table_num.setText(str(table_num))
@@ -46,6 +55,17 @@ class TableInfoWidget(QWidget):
     
     def set_total(self, total:int):
         self.total_amount.setText(str(total))
+
+    def update_widget(self):
+        model = self.data_manager.model
+        
+        self.set_table_num(model.table_id)
+        
+        if model.arrival_time:
+            self.set_time(model.arrival_time.strftime("%H:%M"))
+        else:
+            self.set_time("")
+        self.set_total(model.payment)
         
 
 class OrderTicket(QWidget):
@@ -86,42 +106,56 @@ class OrderTicket(QWidget):
             
 
 class MainWindow(QMainWindow):
-    def __init__(self, table_list = [1,2,3,4,5,6,7,8,9]):
+    def __init__(self, data_manager:DataManager=None):
         super(MainWindow, self).__init__()
 
+        #Data Manager
+        self.data_manager = data_manager
+
+        #Ui default settings
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        
+        self.table_layout = self.ui.table_info_layout
 
         self.ui.stackedWidget.setCurrentIndex(0)
         
-        for i,table in enumerate(self.create_tables(table_list)):
-            row = i // 3
-            column = i%3
-            self.ui.table_info_layout.addWidget(table,row,column)
+
+        self.data_manager.tables_update.connect(self.render_tables)
 
         self.selected_table = None
         self.ui.serve_btn.clicked.connect(lambda: self.on_serve_button_click(self.selected_table))
         self.ui.call_btn.clicked.connect(self.on_call_button_click)
 
-    def create_tables(self, table_list):
-        return [self.create_table_info(table) for table in table_list]
+        #data manager initial refresh
+        self.data_manager.refresh_all()
     
-    def create_table_info(self, table_num:int, first_order_time:str = "", total_amount:int=None):
-        """Create New Table Info
+    def render_tables(self):
+        print("render table")
 
-        Args:
-            table_num (int): table number
-            first_order_time (str, optional): time of the first table order. Defaults to "".
-            total_amount (int, optional): total amount of the table. Defaults to None.
+        #create table_info list by table managers
+        table_managers = self.data_manager.tables
+        table_infos = [self.create_table_info(table_manager) for table_manager in table_managers]
+        
+        #Clear table layout and add new ones
+        self.clear_table_layout()
+        for i,table in enumerate(table_infos):
+            row = i // 3
+            column = i%3
+            self.table_layout.addWidget(table,row,column)
 
-        Returns:
-            TableInfoWidget: single table info widget
-        """
-        table_info = TableInfoWidget()
-        table_info.set_table_num(table_num)
-        table_info.set_time(first_order_time)
-        table_info.set_total(total_amount)
+    def clear_table_layout(self):
+        for i in reversed(range(self.table_layout.count())):
+            item = self.table_layout.itemAt(i)
+            if item is not None:
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater() 
 
+    def create_table_info(self, table_manager):
+        print("create table_info")
+        print(table_manager)
+        table_info = TableInfoWidget(table_manager)
         return table_info
     
     def create_order_ticket(self, table_num:int=1, time:str="00:00", order_data:list[SingleOrder]=list()):
@@ -167,10 +201,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     window = MainWindow()
-
-    # order = {"table_id":1, "orders":[{"menu_id":1, "quantity":2},{"menu_id":2, "quantity":1}]}
-
-    # window.create_order(order)
     window.show()
 
     sys.exit(app.exec())
