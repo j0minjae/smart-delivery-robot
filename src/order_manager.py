@@ -7,9 +7,98 @@ import pandas as pd
 class OrderManager:
     # 테이블: 생성
     def __init__(self):
-        self.conn = sqlite3.connect('database/order_chit.db')  # SQLite DB 연결
-        self.cursor = self.conn.cursor()
-        self.cursor.execute('''
+        pass
+
+    # 테이블: 메뉴 구성
+    def update_menu(self, input_menu):
+        """
+        입력 데이터를 기반으로 데이터베이스를 업데이트
+        menu_id는 첫 메뉴부터 1로 순차적 부여
+        ex)
+        <input>
+        input_menu = {
+            '로스카츠': 10000,
+            '히레카츠': 11000,
+            '모둠카츠': 16000,
+            '치즈카츠': 13000
+        }
+
+        <output>
+        menu_id  menu_name  menu_price
+        -------  ---------  ----------
+        1        로스카츠       10000     
+        2        히레카츠       11000     
+        3        모둠카츠       16000     
+        4        치즈카츠       13000  
+        """
+
+        # SQLite DB 연결
+        conn = sqlite3.connect('database/menu.db')
+        cursor = conn.cursor()
+
+        # 테이블 생성
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS menu (
+                menu_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                menu_name TEXT UNIQUE,
+                menu_price INTEGER
+            );
+        ''')
+        conn.commit()
+        print("Table created (if it did not exist).")
+
+        # 기존 데이터 초기화
+        cursor.execute('DELETE FROM menu;')  # 테이블 비우기
+        cursor.execute('DELETE FROM sqlite_sequence WHERE name = "menu";')  # AUTOINCREMENT 리셋
+        conn.commit()
+        print("Table(menu) cleared and menu_id reset.")
+
+        # 입력 데이터 삽입
+        for menu_name, menu_price in input_menu.items():
+            cursor.execute('''
+                INSERT INTO menu (menu_name, menu_price)
+                VALUES (?, ?);
+            ''', (menu_name, menu_price))
+            print(f"Inserted: {menu_name} -> {menu_price}")
+
+        # 변경 사항 커밋
+        conn.commit()
+        print("Database(menu.db) updated with input menu.")
+
+        # 연결 종료
+        conn.close()
+        print("Database(menu.db) connection closed.")
+
+    # 테이블: 주문수락 데이터 추출 및 삽입
+    def insert_order(self, place_order, time_stamp):
+        """
+        주문이 수락되면 database에 추가되도록 처리하며,
+        menu 테이블이 비어 있는 경우 메시지를 출력합니다.
+        ex)
+        <input>
+        place_order = {
+            "table_id": 5,
+            "orders": [
+                {"menu_id": "1", "quantity": 2},
+                {"menu_id": "2", "quantity": 2},
+                {"menu_id": "3", "quantity": 2}
+            ]
+        }
+
+        <result>
+        order_id  time_stamp           table_id  menu_id  total_price
+        --------  -------------------  --------  -------  -----------
+        1         2024-11-27 13:52:31  5         1        10,000     
+        2         2024-11-27 13:52:31  5         2        11,000     
+        3         2024-11-27 13:52:31  5         3        12,000     
+        4         2024-11-27 13:52:32  5         1        10,000   
+        """
+        # SQLite DB 연결
+        conn = sqlite3.connect('database/order_datas.db')  # 주문 데이터베이스 연결
+        cursor = conn.cursor()
+
+        # orders 테이블 생성
+        cursor.execute('''
             CREATE TABLE IF NOT EXISTS orders (
                 order_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 time_stamp TEXT,
@@ -18,36 +107,60 @@ class OrderManager:
                 total_price TEXT
             );
         ''')
-        self.conn.commit()
-        print("Table created (if it did not exist).")
+        conn.commit()
+        print("Table(orders) created (if it did not exist).")
 
-    # 테이블: 주문수락 데이터 추출 및 삽입
-    def get_and_insert_order(self, place_order, menu_price, time_stamp):
-        # 메뉴 개수 만큼 order 저장 (테이블 아이디, 메뉴이름, 수량)
+        # 메뉴 데이터베이스(menu) 연결
+        menu_conn = sqlite3.connect('database/menu.db')  # 메뉴 정보가 저장된 DB 연결
+        menu_cursor = menu_conn.cursor()
+
+        # 메뉴 테이블 확인
+        menu_cursor.execute('SELECT COUNT(*) FROM menu;')
+        menu_count = menu_cursor.fetchone()[0]  # 메뉴 데이터 개수 확인
+
+        if menu_count == 0:
+            print("Menu is empty. No orders can be processed.")
+            menu_conn.close()
+            print("Database(menu.db) connection closed.")
+            return
+
+        # 메뉴 개수 만큼 order 저장 (테이블 아이디, 메뉴 이름, 수량)
         table_id = place_order['table_id']
         orders = place_order['orders']
-        for order in orders:
-            menu_id = str(order['menu_id'])
-            quantity = order['quantity']
-            price = menu_price[menu_id] * quantity
-            formatted_price = '{:,}'.format(price)
 
-            self.cursor.execute('''
-                INSERT INTO orders (time_stamp, table_id, menu_id, total_price)
-                VALUES (?, ?, ?, ?);
-            ''', (time_stamp, table_id, menu_id, formatted_price))
-        
-        self.conn.commit()
-        # order 저장 인포 로깅
+        for order in orders:
+            menu_id = order['menu_id']
+            quantity = order['quantity']
+
+            # menu 테이블에서 menu_id에 맞는 가격 조회
+            menu_cursor.execute('SELECT menu_price FROM menu WHERE menu_id = ?;', (menu_id,))
+            result = menu_cursor.fetchone()
+
+            if result:
+                menu_price = result[0]  # 가격 가져오기
+                price = menu_price * quantity
+                formatted_price = '{:,}'.format(price)
+
+                # orders 테이블에 주문 데이터 삽입
+                cursor.execute('''
+                    INSERT INTO orders (time_stamp, table_id, menu_id, total_price)
+                    VALUES (?, ?, ?, ?);
+                ''', (time_stamp, table_id, menu_id, formatted_price))
+                print(f"Order inserted: Menu ID {menu_id}, Quantity {quantity}, Total Price {formatted_price}")
+            else:
+                print(f"Error: Menu ID {menu_id} not found in the menu database.")
+
+        # 커밋 및 연결 종료
+        conn.commit()
         print("Order saved to database.")
-        
-    def close_connection(self):
-        self.conn.close()
-        print("Database connection closed.")
+        conn.close()
+        print("Database(order_datas.db) connection closed.")
+        menu_conn.close()
+        print("Database(menu.db) connection closed.")
 
 # 통계: 지난 한 달간의 일일매출을 시각화(꺾은선 그래프)
 def generate_sales_graph():
-    conn = sqlite3.connect('database/order_chit.db')  # SQLite DB 연결
+    conn = sqlite3.connect('database/order_datas.db')  # SQLite DB 연결
     cursor = conn.cursor()
     
     # 오늘 날짜 기준으로 한 달 전 날짜 계산
@@ -83,17 +196,17 @@ def generate_sales_graph():
                     f'{row["Daily Sales (KRW in 10k)"]:.1f} (10k)', 
                     color='black', ha='center', va='bottom')  # va는 value 위치 설정 (위쪽, 아래쪽)
 
-        # 지난 한 달간의 기간 표시
-        plt.xlabel('Date')
-        plt.ylabel('Daily Sales (KRW in 10k)')
-        plt.title(f'Daily Sales for the Last Month ({one_month_ago_str} to {datetime.now().strftime("%Y-%m-%d")})')
-        plt.xticks(rotation=45)
-        plt.grid(True)
-        plt.tight_layout()
-        plt.show()
-    else:
-        # 데이터가 없으면 로그 메시지 출력
-        print("No sales data available for the last month.")
+    #     # 지난 한 달간의 기간 표시
+    #     plt.xlabel('Date')
+    #     plt.ylabel('Daily Sales (KRW in 10k)')
+    #     plt.title(f'Daily Sales for the Last Month ({one_month_ago_str} to {datetime.now().strftime("%Y-%m-%d")})')
+    #     plt.xticks(rotation=45)
+    #     plt.grid(True)
+    #     plt.tight_layout()
+    #     plt.show()
+    # else:
+    #     # 데이터가 없으면 로그 메시지 출력
+    #     print("No sales data available for the last month.")
     
     conn.close()
 
@@ -185,7 +298,7 @@ def generate_sales_graph():
 
 # 메뉴별 매출 시각화 (날짜 범위 입력)
 def generate_menu_sales_graph(start_date, end_date):
-    conn = sqlite3.connect('database/order_chit.db')  # SQLite DB 연결
+    conn = sqlite3.connect('database/order_datas.db')  # SQLite DB 연결
     cursor = conn.cursor()
 
     # 날짜 범위에 따른 메뉴별 매출 합산
@@ -264,9 +377,6 @@ def main():
 
     # 데이터 삽입 실행
     node.get_and_insert_order(request, menu_price, time_stamp)
-
-    # 연결 종료
-    node.close_connection()
 
     # 통계
     generate_sales_graph()
