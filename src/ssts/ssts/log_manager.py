@@ -1,10 +1,16 @@
+from ament_index_python.packages import get_package_share_directory
 import sqlite3
 from datetime import datetime
+import os
 
 class LogManager:
     # 로그 데이터: 테이블 생성
     def __init__(self):
-        self.conn = sqlite3.connect('database/log_datas.db')  # SQLite DB 연결
+        package_share_directory = get_package_share_directory('ssts')
+
+        # 데이터베이스 파일 경로 생성
+        db_path = os.path.join(package_share_directory, 'database', 'log_datas.db')
+        self.conn = sqlite3.connect(db_path)  # SQLite DB 연결
         self.cursor = self.conn.cursor()
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS logs (
