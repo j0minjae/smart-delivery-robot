@@ -1,10 +1,12 @@
 import rclpy
 import sys
+from datetime import datetime
 from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QApplication
-from db_management import LogManager, OrderManager
+from db_management import OrderManager
 from ssts import gui
-from ui import MainWindow
+from ui import MainWindow, DataManager, TableManager
+from DTO import TableInfo
 
 class ROS2Thread(QThread):
     def __init__(self, node):
@@ -21,9 +23,14 @@ class ROS2Thread(QThread):
 
 def main(args=None):
     rclpy.init(args=args)
+    
+    table_infos = [TableInfo(table_id=i) for i in range(1,10)]
+    table_infos[0].arrival_time = datetime.now()
+
+    data_manager = DataManager(tables=table_infos)
 
     app = QApplication(sys.argv)
-    main_window = MainWindow()
+    main_window = MainWindow(data_manager)
 
     db_instance = OrderManager()
     
