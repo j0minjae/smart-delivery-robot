@@ -5,37 +5,35 @@ from rcl_interfaces.msg import Log
 from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import Point, PoseStamped, Quaternion, Pose
 from serving_bot_interfaces.srv import PlaceOrder
-from PyQt5.QtWidgets import QApplication
 import math
-from threading import Thread
-from unit_ui import OrderUI
-from unit_log import log
-from unit_db import DB
+from ssts.log_manager import LogManager
+from ssts.order_manager import OrderManager
+
 
 class gui(Node):
 
-    def __init__(self):
+    def __init__(self, log_instance, db_instance):
         super().__init__('gui')
+
+        self.log = log_instance
+        self.db = db_instance
 
         self.order_service = self.create_service(PlaceOrder,'/order', self.order_callback)
         self.log_sub = self.create_subscription(Log, '/rosout', self.log_callback, 10)
         self.send_menu = ActionClient(self,NavigateToPose, 'navigate_to_pose')
-        # self.log = log_instance
-        # self.db = db_instance
 
         self.locate_tables = {
-            '1': Pose(position = Point(x=1.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            '2': Pose(position = Point(x=2.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            '3': Pose(position = Point(x=3.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            '4': Pose(position = Point(x=1.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            '5': Pose(position = Point(x=2.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            '6': Pose(position = Point(x=3.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            '7': Pose(position = Point(x=1.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            '8': Pose(position = Point(x=2.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            '9': Pose(position = Point(x=3.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+            1: Pose(position = Point(x=1.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+            2: Pose(position = Point(x=2.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+            3: Pose(position = Point(x=3.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+            4: Pose(position = Point(x=1.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+            5: Pose(position = Point(x=2.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+            6: Pose(position = Point(x=3.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+            7: Pose(position = Point(x=1.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+            8: Pose(position = Point(x=2.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+            9: Pose(position = Point(x=3.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
             'home': Pose(position = Point(x=0.0, y=0.0),orientation = self.euler_to_quaternion(0, 0, 0))
         }
-        print('check')
 
     def euler_to_quaternion(self, roll, pitch, yaw):
         # Convert Euler angles to a quaternion
@@ -53,12 +51,11 @@ class gui(Node):
         self.get_logger().info(f'check')
         table_id = request.table_id
         orders = request.orders
-        respone.msg = '주문이 완료되었습니다.'
-        print(table_id, orders)
+        self.db.update_db(table_id, orders)
         # self.send_db(table_id, orders)
 
-        if str(table_id) in self.locate_tables:
-            target_pose = str(table_id)
+        if table_id in self.locate_tables:
+            target_pose = self.locate_tables[table_id]
             self.movement(target_pose)
         return respone
     
@@ -69,10 +66,12 @@ class gui(Node):
         movement.pose.position.x = target_pose.position.x
         movement.pose.position.y = target_pose.position.y
         movement.pose.orientation = target_pose.orientation
-        self._action_client.wait_for_server()
+        self.send_menu.wait_for_server()
         self.get_logger().info(f'complete to serve')
-        self._action_client.send_goal_async(
-            movement,
+        goal = NavigateToPose.Goal()
+        goal.pose = movement
+        self.send_menu.send_goal_async(
+            goal,
             feedback_callback=self.feedback_callback
         ).add_done_callback(self.goal_response_callback)
 
@@ -91,10 +90,8 @@ class gui(Node):
     def get_result_callback(self, future):
         result = future.result().result
         self.get_logger().info(f'Result: {result}')
-        rclpy.shutdown()
+        
 
-    # def send_db(self, table_id, orders):
-    #     self.db.update_db(table_id, orders)
 
 
 # def run_ros(node):
@@ -108,9 +105,9 @@ def main(args=None):
     rclpy.init(args=args)
     # app = QApplication([])
     # ui_instance = OrderUI()
-    # log_instance = log()
-    # db_instance = DB()
-    node = gui()
+    log_instance = LogManager()
+    db_instance = OrderManager()
+    node = gui(log_instance, db_instance)
     rclpy.spin(node)
     # threading = Thread(target=run_ros, args=[node,], daemon=True)
     # threading.start()

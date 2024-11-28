@@ -3,11 +3,19 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+from ament_index_python.packages import get_package_share_directory
+import os
 
 class OrderManager:
     # 테이블: 생성
     def __init__(self):
-        pass
+        package_share_directory = get_package_share_directory('ssts')
+        # 데이터베이스 파일 경로 생성
+        self.order_db_path = os.path.join(package_share_directory, 'database', 'order_datas.db')
+        self.menu_db_path = os.path.join(package_share_directory, 'database', 'menu.db') 
+
+    def update_db(self, table_id, orders):
+        self.insert_order(table_id, orders)
 
     # 테이블: 메뉴 구성
     def update_menu(self, input_menu):
@@ -33,7 +41,7 @@ class OrderManager:
         """
 
         # SQLite DB 연결
-        conn = sqlite3.connect('database/menu.db')
+        conn = sqlite3.connect(self.menu_db_path)
         cursor = conn.cursor()
 
         # 테이블 생성
@@ -70,7 +78,8 @@ class OrderManager:
         print("Database(menu.db) connection closed.")
 
     # 테이블: 주문수락 데이터 추출 및 삽입
-    def insert_order(self, place_order, time_stamp):
+    def insert_order(self, table_id, orders):
+        time_stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         """
         주문이 수락되면 database에 추가되도록 처리하며,
         menu 테이블이 비어 있는 경우 메시지를 출력합니다.
@@ -94,7 +103,7 @@ class OrderManager:
         4         2024-11-27 13:52:32  5         1        10,000   
         """
         # SQLite DB 연결
-        conn = sqlite3.connect('database/order_datas.db')  # 주문 데이터베이스 연결
+        conn = sqlite3.connect(self.order_db_path)  # 주문 데이터베이스 연결
         cursor = conn.cursor()
 
         # orders 테이블 생성
@@ -111,7 +120,7 @@ class OrderManager:
         print("Table(orders) created (if it did not exist).")
 
         # 메뉴 데이터베이스(menu) 연결
-        menu_conn = sqlite3.connect('database/menu.db')  # 메뉴 정보가 저장된 DB 연결
+        menu_conn = sqlite3.connect(self.menu_db_path)  # 메뉴 정보가 저장된 DB 연결
         menu_cursor = menu_conn.cursor()
 
         # 메뉴 테이블 확인
@@ -124,13 +133,9 @@ class OrderManager:
             print("Database(menu.db) connection closed.")
             return
 
-        # 메뉴 개수 만큼 order 저장 (테이블 아이디, 메뉴 이름, 수량)
-        table_id = place_order['table_id']
-        orders = place_order['orders']
-
         for order in orders:
-            menu_id = order['menu_id']
-            quantity = order['quantity']
+            menu_id = order.menu_id
+            quantity = order.quantity
 
             # menu 테이블에서 menu_id에 맞는 가격 조회
             menu_cursor.execute('SELECT menu_price FROM menu WHERE menu_id = ?;', (menu_id,))
@@ -160,7 +165,7 @@ class OrderManager:
 
 # 통계: 지난 한 달간의 일일매출을 시각화(꺾은선 그래프)
 def generate_sales_graph():
-    conn = sqlite3.connect('database/order_datas.db')  # SQLite DB 연결
+    conn = sqlite3.connect(os.path.join(get_package_share_directory('ssts'), 'database', 'order_datas.db'))  # SQLite DB 연결
     cursor = conn.cursor()
     
     # 오늘 날짜 기준으로 한 달 전 날짜 계산
@@ -298,7 +303,7 @@ def generate_sales_graph():
 
 # 메뉴별 매출 시각화 (날짜 범위 입력)
 def generate_menu_sales_graph(start_date, end_date):
-    conn = sqlite3.connect('database/order_datas.db')  # SQLite DB 연결
+    conn = sqlite3.connect(os.path.join(get_package_share_directory('ssts'), 'database', 'order_datas.db'))  # SQLite DB 연결
     cursor = conn.cursor()
 
     # 날짜 범위에 따른 메뉴별 매출 합산
@@ -351,32 +356,32 @@ def main():
     # OrderManager 객체 생성 및 데이터 삽입
     node = OrderManager()
 
-    # 메뉴와 가격 정보
-    menu_price = {
-        "1": 10000,
-        "2": 11000,
-        "3": 12000
-    }
+    # # 메뉴와 가격 정보
+    # menu_price = {
+    #     "1": 10000,
+    #     "2": 11000,
+    #     "3": 12000
+    # }
 
-    # 요청 예시 데이터
-    request = {
-        "table_id": 5,
-        "orders": [
-            {"menu_id": "1", "quantity": 2},
-            {"menu_id": "2", "quantity": 2},
-            {"menu_id": "3", "quantity": 2}
-        ]
-    }
+    # # 요청 예시 데이터
+    # request = {
+    #     "table_id": 5,
+    #     "orders": [
+    #         {"menu_id": "1", "quantity": 2},
+    #         {"menu_id": "2", "quantity": 2},
+    #         {"menu_id": "3", "quantity": 2}
+    #     ]
+    # }
 
     # 시작일과 종료일 입력받기 (YYYY-MM-DD 형식)
     start_date = "2024-11-01"
     end_date = "2024-11-28" # 28일을 포함하지 않음
 
     # 현재 시간 생성
-    time_stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
 
-    # 데이터 삽입 실행
-    node.get_and_insert_order(request, menu_price, time_stamp)
+    # # 데이터 삽입 실행
+    # node.get_and_insert_order(request, menu_price, time_stamp)
 
     # 통계
     generate_sales_graph()
