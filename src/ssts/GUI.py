@@ -21,6 +21,8 @@ class gui(Node):
         self.db = db_instance
         self.data_manager = data_manager
 
+        self.data_manager.robot_serve_update.connect(self.move_to_table)
+
         self.order_service = self.create_service(PlaceOrder,'/order', self.order_callback)
         self.log_sub = self.create_subscription(Log, '/rosout', self.log_callback, 10)
         self.send_menu = ActionClient(self,NavigateToPose, 'navigate_to_pose')
@@ -55,7 +57,6 @@ class gui(Node):
         table_id = request.table_id
         orders = request.orders
         self.db.update_db(table_id, orders)
-        # self.send_db(table_id, orders)
 
         # if table_id in self.locate_tables:
         #     target_pose = self.locate_tables[table_id]
@@ -70,6 +71,15 @@ class gui(Node):
         response.success = True
         
         return response
+
+    def move_to_table(self, table_id):
+        self.get_logger().info(f"{table_id}로 이동")
+        if table_id == 0:
+            table_id = "home"
+
+        if table_id in self.locate_tables:
+            target_pose = self.locate_tables[table_id]
+            self.movement(target_pose)
     
     def movement(self, target_pose):
         movement = PoseStamped()

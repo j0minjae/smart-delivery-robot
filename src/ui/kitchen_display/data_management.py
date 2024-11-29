@@ -45,6 +45,8 @@ class TicketManager(QObject):
 class DataManager(QObject):
     tables_update = pyqtSignal()
     tickets_update = pyqtSignal()
+    robot_serve_update = pyqtSignal(int)#table id or home(0)
+
 
     def __init__(self, tables:list[TableInfo]=list(), tickets:list[OrderTicket]=list()):
         super().__init__()
@@ -74,5 +76,9 @@ class DataManager(QObject):
                 new_ticket = copy.deepcopy(table_manager.model)
                 new_ticket.order.extend(ticket.order)
                 table_manager.update_table(new_ticket)
+    
+    def control_robot(self,table_id:int):
+        print(f"contorl_robot: {table_id}로 이동명령")
+        self.robot_serve_update.emit(table_id)
 
 

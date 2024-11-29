@@ -212,14 +212,11 @@ class MainWindow(QMainWindow):
         else:
             print("보낼 테이블이 정해지지 않았습니다")
 
-        # temp_ticket = OrderTicket(1,order=[
-        #     MenuItem(1,2,False),
-        #     MenuItem(2,1,False)
-        # ])
-        # self.data_manager.create_order(temp_ticket)
+        self.data_manager.control_robot(3)
 
     def on_call_button_click(self):
         print("로봇을 호출합니다")
+        self.data_manager.control_robot(0)
          
     
     
