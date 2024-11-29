@@ -1,20 +1,25 @@
 import rclpy
+from rclpy.duration import Duration
 import sys
 from datetime import datetime
 from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QApplication
 from db_management import OrderManager
 from ssts import gui
+from control_manager import InitialPose
 from ui import MainWindow, DataManager, TableManager
 from DTO import TableInfo, OrderTicket, MenuItem
 
 class ROS2Thread(QThread):
-    def __init__(self, node):
+    def __init__(self, node, init_pos):
         super().__init__()
         self.node = node
+        self.init_pos = init_pos
 
     def run(self):
         # ROS2 spin을 별도의 스레드에서 실행
+        rclpy.spin_once(self.init_pos)
+        rclpy.sleep(Duration(seconds=3))
         rclpy.spin(self.node)
 
     def stop(self):
@@ -34,12 +39,14 @@ def main(args=None):
     app = QApplication(sys.argv)
     main_window = MainWindow(data_manager)
 
+    init_pos = InitialPose()
+
     db_instance = OrderManager()
     
     node = gui(db_instance, data_manager=data_manager)
 
     #ros2 thread 실행
-    ros2_thread = ROS2Thread(node)
+    ros2_thread = ROS2Thread(node, init_pos)
     ros2_thread.start()
 
     #ui표시

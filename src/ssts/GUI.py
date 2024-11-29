@@ -9,14 +9,16 @@ from ui import DataManager
 from DTO import OrderTicket, MenuItem, TableInfo
 import math
 from db_management import OrderManager
+from Nav2_goal import ControlManager
 
 
 class gui(Node):
-
     def __init__(self, db_instance, data_manager:DataManager=None):
         super().__init__('gui')
 
         self.get_logger().info("gui node init")
+
+        self.contorl_manager = ControlManager(self)
 
         self.db = db_instance
         self.data_manager = data_manager
@@ -27,18 +29,18 @@ class gui(Node):
         self.log_sub = self.create_subscription(Log, '/rosout', self.log_callback, 10)
         self.send_menu = ActionClient(self,NavigateToPose, 'navigate_to_pose')
 
-        self.locate_tables = {
-            1: Pose(position = Point(x=1.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            2: Pose(position = Point(x=2.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            3: Pose(position = Point(x=3.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            4: Pose(position = Point(x=1.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            5: Pose(position = Point(x=2.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            6: Pose(position = Point(x=3.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            7: Pose(position = Point(x=1.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            8: Pose(position = Point(x=2.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            9: Pose(position = Point(x=3.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
-            'home': Pose(position = Point(x=0.0, y=0.0),orientation = self.euler_to_quaternion(0, 0, 0))
-        }
+        # self.locate_tables = {
+        #     1: Pose(position = Point(x=1.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+        #     2: Pose(position = Point(x=2.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+        #     3: Pose(position = Point(x=3.0, y=1.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+        #     4: Pose(position = Point(x=1.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+        #     5: Pose(position = Point(x=2.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+        #     6: Pose(position = Point(x=3.0, y=2.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+        #     7: Pose(position = Point(x=1.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+        #     8: Pose(position = Point(x=2.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+        #     9: Pose(position = Point(x=3.0, y=3.0),orientation = self.euler_to_quaternion(0, 0, 0)),
+        #     'home': Pose(position = Point(x=0.0, y=0.0),orientation = self.euler_to_quaternion(0, 0, 0))
+        # }
 
     def euler_to_quaternion(self, roll, pitch, yaw):
         # Convert Euler angles to a quaternion
@@ -74,12 +76,12 @@ class gui(Node):
 
     def move_to_table(self, table_id):
         self.get_logger().info(f"{table_id}로 이동")
-        if table_id == 0:
-            table_id = "home"
+        
+        self.contorl_manager.send_goal(str(table_id))
 
-        if table_id in self.locate_tables:
-            target_pose = self.locate_tables[table_id]
-            self.movement(target_pose)
+        # if table_id in self.locate_tables:
+        #     target_pose = self.locate_tables[table_id]
+        #     self.movement(target_pose)
     
     def movement(self, target_pose):
         movement = PoseStamped()
