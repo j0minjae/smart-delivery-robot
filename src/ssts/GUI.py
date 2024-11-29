@@ -5,16 +5,21 @@ from rcl_interfaces.msg import Log
 from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import Point, PoseStamped, Quaternion, Pose
 from serving_bot_interfaces.srv import PlaceOrder
+from ui import DataManager
+from DTO import OrderTicket, MenuItem, TableInfo
 import math
 from db_management import OrderManager
 
 
 class gui(Node):
 
-    def __init__(self, db_instance):
+    def __init__(self, db_instance, data_manager:DataManager=None):
         super().__init__('gui')
 
+        self.get_logger().info("gui node init")
+
         self.db = db_instance
+        self.data_manager = data_manager
 
         self.order_service = self.create_service(PlaceOrder,'/order', self.order_callback)
         self.log_sub = self.create_subscription(Log, '/rosout', self.log_callback, 10)
@@ -45,17 +50,26 @@ class gui(Node):
         self.db.update_log(msg)
         
 
-    def order_callback(self, request, respone):
+    def order_callback(self, request, response):
         self.get_logger().info(f'check')
         table_id = request.table_id
         orders = request.orders
         self.db.update_db(table_id, orders)
         # self.send_db(table_id, orders)
 
-        if table_id in self.locate_tables:
-            target_pose = self.locate_tables[table_id]
-            self.movement(target_pose)
-        return respone
+        # if table_id in self.locate_tables:
+        #     target_pose = self.locate_tables[table_id]
+        #     self.movement(target_pose)
+
+        # Data Manager
+        if self.data_manager:
+            orders = [MenuItem(menu.menu_id, menu.quantity) for menu in orders]
+            ticket = OrderTicket(table_id, order=orders)
+            self.data_manager.create_order(ticket)
+
+        response.success = True
+        
+        return response
     
     def movement(self, target_pose):
         movement = PoseStamped()
@@ -91,7 +105,9 @@ class gui(Node):
 
     def call_log(self):
         return self.db.call_log()
-        
+    
+    def serve_button_callback(self):
+        self.get_logger().info("serve button clicked in gui node")
 
 
 
