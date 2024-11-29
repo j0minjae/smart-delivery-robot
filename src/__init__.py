@@ -1,1 +1,1 @@
-from .GUI import gui
+from .ssts.ssts.GUI import gui

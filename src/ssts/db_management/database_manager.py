@@ -3,20 +3,29 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+from ament_index_python.packages import get_package_share_directory
 import os
-
 
 class OrderManager:
     # 테이블: 생성
     # def __init__(self):
         # 데이터베이스 파일 경로 생성
-        # '/home/pgt/doosan/serving-bot/database/database.db' = '/home/pgt/doosan/serving-bot/database/database.db'
+        # db_path = '/home/pgt/doosan/serving-bot/database/database.db'
         # SQLite DB 연결
         
+    def get_resource_file_path(self):
+        # 공유 디렉토리 경로 얻기
+        share_dir = get_package_share_directory('ssts')
+        
+        # 해당 파일 경로 생성
+        resource_path = os.path.join(share_dir, 'database.db')
+        
+        return resource_path
 
     # 테이블: 메뉴 구성
     def update_menu(self, input_menu):
-        conn = sqlite3.connect('/home/pgt/doosan/serving-bot/database/database.db')
+        db_path = self.get_resource_file_path()
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         """
         입력 데이터를 기반으로 데이터베이스를 업데이트
@@ -71,12 +80,20 @@ class OrderManager:
         print("- Database(menu) updated with input menu.")
 
     def update_db(self, table_id, orders):
+        input_menu = {
+            'Sirloin cutlet': 10000,
+            'Tenderloin cutlet': 11000,
+            'Assorted Katsu': 16000,
+            'Cheese Katsu': 13000
+        }
+        self.update_menu(input_menu)
         self.insert_order(table_id, orders)
 
     # 테이블: 주문수락 데이터 추출 및 삽입
     def insert_order(self, table_id, orders):
         print("asd")
-        conn = sqlite3.connect('/home/pgt/doosan/serving-bot/database/database.db')
+        db_path = self.get_resource_file_path()
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         """
         주문이 수락되면 database에 추가되도록 처리하며,
@@ -178,13 +195,15 @@ class OrderManager:
         return log_lst
     
     def get_db_connection(self):
-        conn = sqlite3.connect('/home/pgt/doosan/serving-bot/database/database.db')
+        db_path = self.get_resource_file_path()
+        conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row  # 각 행을 딕셔너리 형태로 반환
         return conn
 
     # 테이블: 로그 데이터 추출 및 삽입
     def insert_log(self, node_name, log_level, message):
-        conn = sqlite3.connect('/home/pgt/doosan/serving-bot/database/database.db')
+        db_path = self.get_resource_file_path()
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         # 테이블 생성
         cursor.execute('''
@@ -212,7 +231,8 @@ class OrderManager:
     # 통계: 지난 한 달간의 일일 매출을 시각화(꺾은선 그래프)
     # 필요에 따라 n일간의 일일 매출로 변경 가능
     def generate_sales_graph(self, days=30):
-        conn = sqlite3.connect('/home/pgt/doosan/serving-bot/database/database.db')
+        db_path = self.get_resource_file_path()
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         # 오늘 날짜 기준으로 n일 전 날짜 계산
         start_date = datetime.now() - timedelta(days=days)
@@ -319,7 +339,8 @@ class OrderManager:
     
     # 통계: 지난 일주일간 요일별 매출 매출 0이면 안뜸
     def generate_weekday_sales_graph(self):
-        conn = sqlite3.connect('/home/pgt/doosan/serving-bot/database/database.db')
+        db_path = self.get_resource_file_path()
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         # 오늘 날짜와 6일 전 날짜 계산 (오늘 포함)
         today = datetime.today()
@@ -379,7 +400,8 @@ class OrderManager:
 
     # 통계: 메뉴별 매출 시각화 (날짜 범위 입력)
     def generate_menu_sales_graph(self,date):
-        conn = sqlite3.connect('/home/pgt/doosan/serving-bot/database/database.db')
+        db_path = self.get_resource_file_path()
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         start_date, end_date = date  # date_range: 튜플 또는 리스트로 시작일, 종료일을 입력받음
     

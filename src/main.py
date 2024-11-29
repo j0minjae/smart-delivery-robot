@@ -2,8 +2,8 @@ import rclpy
 import sys
 from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QApplication
-from db_management import OrderManager
-from ssts.ssts import gui
+from .ssts.db_management import OrderManager
+from src import gui
 from ui import MainWindow
 
 class ROS2Thread(QThread):
