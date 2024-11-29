@@ -18,8 +18,8 @@ class OrderManager:
         share_dir = get_package_share_directory('ssts')
         
         # 해당 파일 경로 생성
-        resource_path = os.path.join(share_dir, 'database/database.db')
-        
+        resource_path = os.path.join(share_dir, 'database.db')
+        print(resource_path)
         return resource_path
 
     # 테이블: 메뉴 구성

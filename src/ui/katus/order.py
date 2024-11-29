@@ -1,20 +1,25 @@
 import rclpy
 from rclpy.node import Node
-from std_srvs.srv import Trigger
 from serving_bot_interfaces.srv import PlaceOrder  # GUI.py에서 사용
-from geometry_msgs.msg import PoseStamped
-
+from serving_bot_interfaces.msg import Order
 
 class MiddleNode(Node):
     def __init__(self):
         super().__init__('middle_node')
         # GUI.py와 통신할 서비스
-        self.order_service = self.create_client(PlaceOrder, '/order', 10)
+        self.order_client = self.create_client(PlaceOrder, '/order')
 
-    def send_order_to_tabla_order(self, order_details):
+    def send_order_to_tabla_order(self, table_id, orders):
         """tabla order.py로 주문 데이터를 전달."""
-        request = Trigger.Request()
-        request.message = "\n".join(order_details)
+        request = PlaceOrder.Request()
+
+        request.table_id = table_id
+        
+        for k, v in orders.items():
+            order = Order()
+            order.menu_id = k
+            order.quantity = v
+            request.orders.append(order)
 
         future = self.order_client.call_async(request)
         rclpy.spin_until_future_complete(self, future)
