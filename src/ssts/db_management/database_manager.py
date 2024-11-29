@@ -18,7 +18,7 @@ class OrderManager:
         share_dir = get_package_share_directory('ssts')
         
         # 해당 파일 경로 생성
-        resource_path = os.path.join(share_dir, 'database.db')
+        resource_path = os.path.join(share_dir, 'database/database.db')
         
         return resource_path
 
@@ -80,13 +80,6 @@ class OrderManager:
         print("- Database(menu) updated with input menu.")
 
     def update_db(self, table_id, orders):
-        input_menu = {
-            'Sirloin cutlet': 10000,
-            'Tenderloin cutlet': 11000,
-            'Assorted Katsu': 16000,
-            'Cheese Katsu': 13000
-        }
-        self.update_menu(input_menu)
         self.insert_order(table_id, orders)
 
     # 테이블: 주문수락 데이터 추출 및 삽입
