@@ -74,7 +74,7 @@ class TableInfoWidget(QWidget):
             self.set_time(model.arrival_time.strftime("%H:%M"))
         else:
             self.set_time("")
-            
+
         self.set_total(model.payment)
         self.set_order(model.order)
 
@@ -85,8 +85,6 @@ class TableInfoWidget(QWidget):
                 widget = item.widget()
                 if widget is not None:
                     widget.deleteLater() 
-
-        
 
 class OrderTicketWidget(QWidget):
     def __init__(self, data_manager:TicketManager=None):
@@ -214,11 +212,11 @@ class MainWindow(QMainWindow):
         else:
             print("보낼 테이블이 정해지지 않았습니다")
 
-        temp_ticket = OrderTicket(1,order=[
-            MenuItem(1,2,False),
-            MenuItem(2,1,False)
-        ])
-        self.data_manager.create_order(temp_ticket)
+        # temp_ticket = OrderTicket(1,order=[
+        #     MenuItem(1,2,False),
+        #     MenuItem(2,1,False)
+        # ])
+        # self.data_manager.create_order(temp_ticket)
 
     def on_call_button_click(self):
         print("로봇을 호출합니다")
