@@ -36,7 +36,7 @@ def main(args=None):
 
     db_instance = OrderManager()
     
-    node = gui(db_instance)
+    node = gui(db_instance, data_manager=data_manager)
 
     #ros2 thread 실행
     ros2_thread = ROS2Thread(node)
