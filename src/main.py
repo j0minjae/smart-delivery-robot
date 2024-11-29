@@ -4,7 +4,7 @@ from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QApplication
 from .ssts.db_management import OrderManager
 from src import gui
-from ui import MainWindow
+from .ui import MainWindow
 
 class ROS2Thread(QThread):
     def __init__(self, node):
