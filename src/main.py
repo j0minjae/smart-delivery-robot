@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication
 from db_management import OrderManager
 from ssts import gui
 from ui import MainWindow, DataManager, TableManager
-from DTO import TableInfo
+from DTO import TableInfo, OrderTicket, MenuItem
 
 class ROS2Thread(QThread):
     def __init__(self, node):
@@ -25,7 +25,9 @@ def main(args=None):
     rclpy.init(args=args)
     
     table_infos = [TableInfo(table_id=i) for i in range(1,10)]
-    table_infos[0].arrival_time = datetime.now()
+    order_tickets = [OrderTicket(table_id=i, order=[
+        MenuItem(1,2,False),
+    ]) for i in range(1,4)]
 
     data_manager = DataManager(tables=table_infos)
 
