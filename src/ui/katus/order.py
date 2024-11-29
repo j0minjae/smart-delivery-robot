@@ -27,9 +27,9 @@ class MiddleNode(Node):
         if future.result() is not None:
             response = future.result()
             if response.success:
-                return True, response.message
+                return True
             else:
-                return False, response.message
+                return False
         else:
             return False, "No response from tabla order service."
 

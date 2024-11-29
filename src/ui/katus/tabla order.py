@@ -1,7 +1,10 @@
 import sys
+import rclpy
 from datetime import datetime
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QFont
+from .order import MiddleNode
+import random
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout,
     QPushButton, QSpinBox, QScrollArea, QFrame, QDialog, QMessageBox
@@ -96,13 +99,22 @@ class CafeMenuApp(QMainWindow):
         self.setGeometry(100, 100, 1400, 900)
 
         self.menu_items = [
-            {"name": "히레카츠 정식", "price": 13000, "image": "src/ui/katus/hirekatsu.jpeg"},
-            {"name": "로스카츠 정식", "price": 12000, "image": "src/ui/katus/roskatsu.jpeg"},
-            {"name": "고구마 치즈 돈까스", "price": 14000, "image": "src/ui/katus/sweetpotato_cheese.jpeg"},
-            {"name": "치즈 돈까스", "price": 13000, "image": "src/ui/katus/cheese_katsu.jpeg"},
-            {"name": "왕 돈까스", "price": 9000, "image": "src/ui/katus/king_katsu.jpeg"},
-            {"name": "모둠 카츠", "price": 15000, "image": "src/ui/katus/mixed_katsu.jpeg"},
+            {"name": "히레카츠 정식", "price": 13000, "image": "ui/katus/hirekatsu.jpeg"},
+            {"name": "로스카츠 정식", "price": 12000, "image": "ui/katus/roskatsu.jpeg"},
+            {"name": "고구마 치즈 돈까스", "price": 14000, "image": "ui/katus/sweetpotato_cheese.jpeg"},
+            {"name": "치즈 돈까스", "price": 13000, "image": "ui/katus/cheese_katsu.jpeg"},
+            {"name": "왕 돈까스", "price": 9000, "image": "ui/katus/king_katsu.jpeg"},
+            {"name": "모둠 카츠", "price": 15000, "image": "ui/katus/mixed_katsu.jpeg"},
         ]
+
+        self.menu_id = {
+            "히레카츠 정식":1,
+            "로스카츠 정식":2,
+            "고구마 치즈 돈까스":3,
+            "치즈 돈까스":4,
+            "왕 돈까스":5,
+            "모둠 카츠":6
+        }
 
         self.cart = {}
         self.spin_boxes = {}  # QSpinBox 객체를 관리할 딕셔너리
@@ -352,6 +364,11 @@ class CafeMenuApp(QMainWindow):
         if not self.cart:
             QMessageBox.warning(self, "주문 실패", "장바구니가 비어 있습니다.")
             return
+        orders = {}
+        for k, v in self.cart.items():
+            orders[self.menu_id[k]] = v["quantity"]
+        order = MiddleNode()
+        order.send_order_to_tabla_order(random.randint(1, 10), orders)
 
         total_price = sum(details["price"] * details["quantity"] for details in self.cart.values())
         order_details = [
@@ -392,6 +409,7 @@ class CafeMenuApp(QMainWindow):
         dialog.exec_()
 
 def main():
+    rclpy.init(args=sys.argv)
     app = QApplication(sys.argv)
     window = CafeMenuApp()
     window.show()
