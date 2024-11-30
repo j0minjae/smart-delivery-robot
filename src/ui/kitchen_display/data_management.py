@@ -37,10 +37,28 @@ class TicketManager(QObject):
 
     def set_order(self, order):
         self.model.order = order
-        self.ticket_update.emit()
+        self.update_ticket()
     
     def update_ticket(self):
         self.ticket_update.emit()
+        print(self.model)
+
+    def check_order(self):
+        self.update_ticket()
+    
+    def check_all_order(self):
+        is_all_checked = True
+        for menu in self.model.order:
+            if menu.is_checked == False:
+                is_all_checked = False
+                break
+        
+        for menu in self.model.order:
+            if is_all_checked:
+                menu.is_checked = False
+            else:
+                menu.is_checked = True
+        self.update_ticket()
 
 class DataManager(QObject):
     tables_update = pyqtSignal()
@@ -65,6 +83,8 @@ class DataManager(QObject):
         self.tickets_update.emit()
     
     def create_ticket(self, ticket: OrderTicket):
+        for menu in ticket.order:
+            menu.is_checked = False
         self.tickets.insert(0, TicketManager(ticket))
         self.refresh_tickets()
 
@@ -80,5 +100,6 @@ class DataManager(QObject):
     def control_robot(self,table_id:int):
         print(f"contorl_robot: {table_id}로 이동명령")
         self.robot_serve_update.emit(table_id)
+    
 
 

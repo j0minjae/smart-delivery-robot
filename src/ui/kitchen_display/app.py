@@ -17,19 +17,33 @@ class SingleOrder:
         self.quantity = quantity
 
 class OrderLabel(QWidget):
-    def __init__(self, menu_id, quantity):
+    def __init__(self, menu:MenuItem, order_change_callback:callable):
         super().__init__()
         self.order_label_ui = Ui_Order_Label()
         self.order_label_ui.setupUi(self)
-        self.description =  self.order_label_ui.description   
+        self.description =  self.order_label_ui.description
+
+        self.checkbox = self.order_label_ui.checkBox
+
+        self.menu = menu
+        self.order_change_callback = order_change_callback
+
+        self.checkbox.toggled.connect(self.on_checkbox_toggled)
         
-        self.menu_id = menu_id
-        self.quantity = quantity
-        
-        self.set_description(f"{quantity} X {menu_id}")
+        self.update_widget()
 
     def set_description(self, description):
         self.description.setText(description)
+
+    def update_widget(self):
+        self.checkbox.setChecked(self.menu.is_checked)
+        self.set_description(f"{self.menu.menu_id} X {self.menu.quantity}")
+
+    def on_checkbox_toggled(self):
+        self.menu.is_checked = self.checkbox.isChecked()
+        self.order_change_callback()
+
+
 
 class TableInfoWidget(QWidget):
     def __init__(self, data_manager:TableManager=None):
@@ -84,7 +98,7 @@ class TableInfoWidget(QWidget):
             if item is not None:
                 widget = item.widget()
                 if widget is not None:
-                    widget.deleteLater() 
+                    widget.deleteLater()
 
 class OrderTicketWidget(QWidget):
     def __init__(self, data_manager:TicketManager=None):
@@ -100,7 +114,8 @@ class OrderTicketWidget(QWidget):
         self.time_since_order = self.order_ticket_ui.time_since_order
         self.order_layout = self.order_ticket_ui.orders
 
-        self.data_manager.update_ticket()
+        self.set_order(self.data_manager.model.order)
+        self.update_widget()
 
     def set_table_num(self, table_num):
         self.table_num.setText(str(table_num))
@@ -112,15 +127,23 @@ class OrderTicketWidget(QWidget):
         self.clear_order_layout()
 
         for menu in order:
-            menu_label = OrderLabel(menu.menu_id, menu.quantity)
+            menu_label = OrderLabel(menu, self.order_change_callback)
             self.order_layout.addWidget(menu_label, alignment=Qt.AlignTop)
+
+    def update_order(self):
+        for i in range(self.order_layout.count()):
+            item = self.order_layout.itemAt(i)
+            if item is not None:
+                order_label = item.widget()
+                if order_label and isinstance(order_label, OrderLabel):
+                    order_label.update_widget()
 
     def update_widget(self):
         model = self.data_manager.model
         
         self.set_table_num(model.table_id)
         self.set_time(str(model.elapsed))
-        self.set_order(model.order)
+        self.update_order()
 
     def clear_order_layout(self):
         for i in reversed(range(self.order_layout.count())):
@@ -128,9 +151,13 @@ class OrderTicketWidget(QWidget):
             if item is not None:
                 widget = item.widget()
                 if widget is not None:
-                    widget.deleteLater() 
+                    widget.deleteLater()
+    
+    def order_change_callback(self):
+        self.data_manager.check_order()
 
-        
+    def mousePressEvent(self, event):
+        self.data_manager.check_all_order()
             
 
 class MainWindow(QMainWindow):
