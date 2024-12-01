@@ -1,4 +1,5 @@
 import copy
+from rcl_interfaces.msg import Log
 from DTO import MenuItem, OrderTicket, TableInfo
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget
 from PyQt5.QtCore import QFile, QTextStream, Qt, QObject, pyqtSignal
@@ -88,7 +89,9 @@ class TicketManager(QObject):
 class DataManager(QObject):
     tables_update = pyqtSignal()
     tickets_update = pyqtSignal()
+    logs_update = pyqtSignal()
     robot_serve_update = pyqtSignal(int)#table id or home(0)
+    log_signal = pyqtSignal(str,int) # msg, log level
 
 
     def __init__(self, tables:list[TableInfo]=list(), tickets:list[OrderTicket]=list()):
@@ -96,6 +99,7 @@ class DataManager(QObject):
         
         self.tables = [TableManager(table) for table in tables]
         self.tickets = [TicketManager(ticket) for ticket in tickets]
+        self.logs:list[Log] = []
 
     def refresh_all(self):
         self.refresh_tables()
@@ -106,6 +110,9 @@ class DataManager(QObject):
     
     def refresh_tickets(self):
         self.tickets_update.emit()
+
+    def refresh_logs(self):
+        self.logs_update.emit()
     
     def create_ticket(self, ticket: OrderTicket):
         for menu in ticket.order:
@@ -122,6 +129,7 @@ class DataManager(QObject):
                 new_ticket = copy.deepcopy(table_manager.model)
                 new_ticket.order.extend(ticket.order)
                 table_manager.update_table(new_ticket)
+        self.emit_log(f"New Order has been created")
 
     def serve_checked_menu(self):
         for ticket_manager in self.tickets:
@@ -136,11 +144,11 @@ class DataManager(QObject):
                 if target_table_id is None:
                     target_table_id = table_id
                 elif target_table_id != table_id:
-                    print("같은 테이블의 항목으로 묶여 있어야 됩니다")
+                    self.emit_log(f"Selected menu items do not belong to the same table",level=30)
                     return
             
         if target_table_id is None:
-            print("선택된 테이블이 없습니다")
+            self.emit_log(f"No table selected",level=30)
         else:
             self.serve_checked_menu()
             self.control_robot(table_id)
@@ -149,8 +157,14 @@ class DataManager(QObject):
         self.control_robot(0)
 
     def control_robot(self,table_id:int):
-        print(f"contorl_robot: {table_id}로 이동명령")
+        self.emit_log(f"Command robot to go table:{table_id}")
         self.robot_serve_update.emit(table_id)
-    
+
+    def emit_log(self, message, level:int=20):
+        self.log_signal.emit(message,level)
+
+    def create_log(self, log:Log):
+        self.logs.append(log)
+        self.refresh_logs()
 
 

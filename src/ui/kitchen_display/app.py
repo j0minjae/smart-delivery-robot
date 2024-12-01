@@ -177,16 +177,19 @@ class MainWindow(QMainWindow):
         
         self.table_layout = self.ui.table_info_layout
         self.ticket_layout =  self.ui.order_tickets_layout
+        self.log_browser = self.ui.order_page_log_browser
 
         self.ui.stackedWidget.setCurrentIndex(0)
         
 
         self.data_manager.tables_update.connect(self.render_tables)
         self.data_manager.tickets_update.connect(self.render_tickets)
+        self.data_manager.logs_update.connect(self.render_logs)
 
         self.ui.serve_btn.clicked.connect(self.on_serve_button_click)
         self.ui.call_btn.clicked.connect(self.on_call_button_click)
         self.ui.robot_serve_btn.clicked.connect(self.on_robot_serve_button_click)
+
 
         #data manager initial refresh
         self.data_manager.refresh_all()
@@ -218,6 +221,15 @@ class MainWindow(QMainWindow):
         self.clear_ticket_layout()
         for order_ticket in order_tickets:
             self.ticket_layout.addWidget(order_ticket, alignment=Qt.AlignTop)
+
+    def render_logs(self):
+        logs = self.data_manager.logs
+
+        log_level_map = {10:"DEBUG", 20:"INFO", 30:"WARN", 40:"ERROR", 50:"FATAL"}
+        
+        self.log_browser.clear()
+        for log in logs:
+            self.log_browser.append(f"[{log.name}][{log_level_map[log.level]}]{log.msg}")
 
     def clear_ticket_layout(self):
         for i in reversed(range(self.ticket_layout.count())):
