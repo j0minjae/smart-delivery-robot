@@ -10,10 +10,11 @@ import time  # 대기 시간 추가를 위해 필요
 # class GoalSender(Node):
 #     def __init__(self):
 class ControlManager:
-    def __init__(self, gui_node:None):
+    def __init__(self, gui_node:Node):
         super().__init__()
+
         self.gui_node = gui_node
-        self.gui_node._action_client = ActionClient(self.gui_node, NavigateToPose, 'navigate_to_pose')
+        self._action_client = ActionClient(self.gui_node, NavigateToPose, 'navigate_to_pose')
         
         # 사전 정의된 목표 좌표
         self.set_nav2_pose = {
@@ -50,13 +51,13 @@ class ControlManager:
         goal_msg.pose.pose.orientation.w = 1.0  # 방향 기본값
 
         # 서버 대기
-        self.gui_node._action_client.wait_for_server()
+        self._action_client.wait_for_server()
         self.gui_node.get_logger().info(
             f"Sending goal to: x={target_pose.x}, y={target_pose.y}, theta={target_pose.z}"
         )
         
         # 목표 전송
-        send_goal_future = self.gui_node._action_client.send_goal_async(
+        send_goal_future = self._action_client.send_goal_async(
             goal_msg,
             feedback_callback=self.feedback_callback
         )
