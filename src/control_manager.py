@@ -49,7 +49,7 @@ class InitialPose(Node):
         try:
             response = future.result()
             if response:
-                self.get_logger().info("[INFO] Initial pose set successfully")
+                self.get_logger().info("[INFO] Initial pose set successfully")  #send ui
                 self.initial_status = True
             else:
                 self.get_logger().warn("[WARN] Failed to set initial pose")
