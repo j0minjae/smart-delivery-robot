@@ -84,53 +84,55 @@ class OrderManager:
 
     # 테이블: 주문수락 데이터 추출 및 삽입
     def insert_order(self, table_id, orders):
-        print("asd")
-        db_path = self.get_resource_file_path()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        """
-        주문이 수락되면 database에 추가되도록 처리하며,
-        menu 테이블이 비어 있는 경우 메시지를 출력합니다.
-        ex)
-        <input>
-        place_order = {
-            "table_id": 5,
-            "orders": [
-                {"menu_id": "1", "quantity": 2},
-                {"menu_id": "2", "quantity": 2},
-                {"menu_id": "3", "quantity": 2}
-            ]
-        }
+        try:
+            db_path = self.get_resource_file_path()
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            """
+            주문이 수락되면 database에 추가되도록 처리하며,
+            menu 테이블이 비어 있는 경우 메시지를 출력합니다.
+            ex)
+            <input>
+            place_order = {
+                "table_id": 5,
+                "orders": [
+                    {"menu_id": "1", "quantity": 2},
+                    {"menu_id": "2", "quantity": 2},
+                    {"menu_id": "3", "quantity": 2}
+                ]
+            }
 
-        <result>
-        order_id  time_stamp           table_id  menu_id  menu_name  total_price
-        --------  -------------------  --------  -------  ---------  -----------
-        1         2024-11-28 12:21:24  5         1        로스카츠       20,000     
-        2         2024-11-28 12:21:24  5         2        히레카츠       22,000     
-        3         2024-11-28 12:21:24  5         3        모둠카츠       32,000     
-        4         2024-11-28 12:23:34  5         1        로스카츠       20,000     
+            <result>
+            order_id  time_stamp           table_id  menu_id  menu_name  total_price
+            --------  -------------------  --------  -------  ---------  -----------
+            1         2024-11-28 12:21:24  5         1        로스카츠       20,000     
+            2         2024-11-28 12:21:24  5         2        히레카츠       22,000     
+            3         2024-11-28 12:21:24  5         3        모둠카츠       32,000     
+            4         2024-11-28 12:23:34  5         1        로스카츠       20,000     
 
-        """
-        # SQLite DB 연결
-        print('## Execute(insert_order) ##')
+            """
+            # SQLite DB 연결
+            print('## Execute(insert_order) ##')
 
-        # orders 테이블 생성 (menu_name 열 추가)
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS orders (
-                order_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                time_stamp TEXT,
-                table_id INTEGER,
-                menu_id INTEGER,
-                menu_name TEXT,
-                total_price INTEGER
-            );
-        ''')
-        conn.commit()
-        print("- Table(orders) created (if it did not exist).")
+            # orders 테이블 생성 (menu_name 열 추가)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS orders (
+                    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    time_stamp TEXT,
+                    table_id INTEGER,
+                    menu_id INTEGER,
+                    menu_name TEXT,
+                    total_price INTEGER
+                );
+            ''')
+            conn.commit()
+            print("- Table(orders) created (if it did not exist).")
 
-        # 메뉴 테이블 확인
-        cursor.execute('SELECT COUNT(*) FROM menu;')
-        menu_count = cursor.fetchone()[0]  # 메뉴 데이터 개수 확인
+            # 메뉴 테이블 확인
+            cursor.execute('SELECT COUNT(*) FROM menu;')
+            menu_count = cursor.fetchone()[0]  # 메뉴 데이터 개수 확인
+        except:
+            self.get_logger().info(f'DB 시스템에 문제가 발생했습니다')    #send ui
 
         if menu_count == 0:
             print("Menu is empty. No orders can be processed.")
