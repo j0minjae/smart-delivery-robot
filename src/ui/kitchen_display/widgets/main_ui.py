@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'widgets/MainWindow.ui'
+# Form implementation generated from reading ui file 'MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -125,15 +125,12 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.addWidget(self.order_tickets)
         self.commands = QtWidgets.QHBoxLayout()
         self.commands.setObjectName("commands")
-        self.label = QtWidgets.QLabel(self.right_split)
-        self.label.setObjectName("label")
-        self.commands.addWidget(self.label)
-        self.selected_table = QtWidgets.QLabel(self.right_split)
-        self.selected_table.setObjectName("selected_table")
-        self.commands.addWidget(self.selected_table)
         self.serve_btn = QtWidgets.QPushButton(self.right_split)
         self.serve_btn.setObjectName("serve_btn")
         self.commands.addWidget(self.serve_btn)
+        self.robot_serve_btn = QtWidgets.QPushButton(self.right_split)
+        self.robot_serve_btn.setObjectName("robot_serve_btn")
+        self.commands.addWidget(self.robot_serve_btn)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.commands.addItem(spacerItem1)
         self.call_btn = QtWidgets.QPushButton(self.right_split)
@@ -166,9 +163,8 @@ class Ui_MainWindow(object):
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'Ubuntu\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
-        self.label.setText(_translate("MainWindow", "테이블"))
-        self.selected_table.setText(_translate("MainWindow", "N"))
-        self.serve_btn.setText(_translate("MainWindow", "서빙 시작"))
+        self.serve_btn.setText(_translate("MainWindow", "직접서빙"))
+        self.robot_serve_btn.setText(_translate("MainWindow", "로봇서빙"))
         self.call_btn.setText(_translate("MainWindow", "로봇 호출"))
 
 

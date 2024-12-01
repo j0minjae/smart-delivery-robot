@@ -237,23 +237,16 @@ p, li { white-space: pre-wrap; }
                <item>
                 <layout class="QHBoxLayout" name="commands">
                  <item>
-                  <widget class="QLabel" name="label">
-                   <property name="text">
-                    <string>테이블</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="selected_table">
-                   <property name="text">
-                    <string>N</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
                   <widget class="QPushButton" name="serve_btn">
                    <property name="text">
-                    <string>서빙 시작</string>
+                    <string>직접서빙</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="robot_serve_btn">
+                   <property name="text">
+                    <string>로봇서빙</string>
                    </property>
                   </widget>
                  </item>

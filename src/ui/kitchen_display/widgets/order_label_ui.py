@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'widgets/OrderLabel.ui'
+# Form implementation generated from reading ui file 'OrderLabel.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -14,12 +14,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_order_label_container(object):
     def setupUi(self, order_label_container):
         order_label_container.setObjectName("order_label_container")
+        order_label_container.setEnabled(True)
         order_label_container.resize(329, 29)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(order_label_container.sizePolicy().hasHeightForWidth())
         order_label_container.setSizePolicy(sizePolicy)
+        order_label_container.setStyleSheet("")
         self.horizontalLayout = QtWidgets.QHBoxLayout(order_label_container)
         self.horizontalLayout.setContentsMargins(-1, 5, -1, 5)
         self.horizontalLayout.setObjectName("horizontalLayout")

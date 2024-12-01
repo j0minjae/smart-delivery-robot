@@ -37,6 +37,7 @@ class OrderLabel(QWidget):
 
     def update_widget(self):
         self.checkbox.setChecked(self.menu.is_checked)
+        self.setDisabled(self.menu.is_disable)
         self.set_description(f"{self.menu.menu_id} X {self.menu.quantity}")
 
     def on_checkbox_toggled(self):
@@ -111,7 +112,9 @@ class OrderTicketWidget(QWidget):
         self.data_manager.ticket_update.connect(self.update_widget)
         
         self.table_num = self.order_ticket_ui.table_num
+        self.table_num = self.order_ticket_ui.table_num
         self.time_since_order = self.order_ticket_ui.time_since_order
+
         self.order_layout = self.order_ticket_ui.orders
 
         self.set_order(self.data_manager.model.order)
@@ -141,6 +144,7 @@ class OrderTicketWidget(QWidget):
     def update_widget(self):
         model = self.data_manager.model
         
+        self.setDisabled(self.data_manager.is_disable)
         self.set_table_num(model.table_id)
         self.set_time(str(model.elapsed))
         self.update_order()
@@ -180,9 +184,9 @@ class MainWindow(QMainWindow):
         self.data_manager.tables_update.connect(self.render_tables)
         self.data_manager.tickets_update.connect(self.render_tickets)
 
-        self.selected_table = None
-        self.ui.serve_btn.clicked.connect(lambda: self.on_serve_button_click(self.selected_table))
+        self.ui.serve_btn.clicked.connect(self.on_serve_button_click)
         self.ui.call_btn.clicked.connect(self.on_call_button_click)
+        self.ui.robot_serve_btn.clicked.connect(self.on_robot_serve_button_click)
 
         #data manager initial refresh
         self.data_manager.refresh_all()
@@ -233,17 +237,14 @@ class MainWindow(QMainWindow):
         order_ticket = OrderTicketWidget(ticket_manager)
         return order_ticket
 
-    def on_serve_button_click(self, table_id):
-        if table_id:
-            print(f"{table_id}로 로봇을 보냅니다")
-        else:
-            print("보낼 테이블이 정해지지 않았습니다")
-
-        self.data_manager.control_robot(3)
+    def on_serve_button_click(self):
+        self.data_manager.serve_checked_menu()
+    
+    def on_robot_serve_button_click(self):
+        self.data_manager.serve_checked_menu_by_robot()
 
     def on_call_button_click(self):
-        print("로봇을 호출합니다")
-        self.data_manager.control_robot(0)
+        self.data_manager.call_robot()
          
     
     

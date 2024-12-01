@@ -6,3 +6,4 @@ class MenuItem:
     menu_id: int
     quantity: int
     is_checked: Optional[bool] = None
+    is_disable: Optional[bool] = None
