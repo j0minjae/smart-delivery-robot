@@ -178,18 +178,23 @@ class MainWindow(QMainWindow):
         self.table_layout = self.ui.table_info_layout
         self.ticket_layout =  self.ui.order_tickets_layout
         self.log_browser = self.ui.order_page_log_browser
+        self.chart_browser = self.ui.chat_text_browser
 
-        self.ui.stackedWidget.setCurrentIndex(0)
+        self.page = 0
+        self.ui.stackedWidget.setCurrentIndex(self.page)
         
 
         self.data_manager.tables_update.connect(self.render_tables)
         self.data_manager.tickets_update.connect(self.render_tickets)
         self.data_manager.logs_update.connect(self.render_logs)
+        self.data_manager.chart_update.connect
 
         self.ui.serve_btn.clicked.connect(self.on_serve_button_click)
         self.ui.call_btn.clicked.connect(self.on_call_button_click)
         self.ui.robot_serve_btn.clicked.connect(self.on_robot_serve_button_click)
 
+        self.ui.order_page_btn.clicked.connect(self.on_order_page_button_click)
+        self.ui.chart_page_btn.clicked.connect(self.on_chart_page_button_click)
 
         #data manager initial refresh
         self.data_manager.refresh_all()
@@ -231,6 +236,10 @@ class MainWindow(QMainWindow):
         for log in logs:
             self.log_browser.append(f"[{log.name}][{log_level_map[log.level]}]{log.msg}")
 
+    def render_chart(self):
+        data = self.data_manager.chart_data
+        self.chart_browser.setText(str(data))
+
     def clear_ticket_layout(self):
         for i in reversed(range(self.ticket_layout.count())):
             item = self.ticket_layout.itemAt(i)
@@ -257,6 +266,14 @@ class MainWindow(QMainWindow):
 
     def on_call_button_click(self):
         self.data_manager.call_robot()
+    
+    def on_order_page_button_click(self):
+        self.page = 0
+        self.ui.stackedWidget.setCurrentIndex(self.page)
+
+    def on_chart_page_button_click(self):
+        self.page = 1
+        self.ui.stackedWidget.setCurrentIndex(self.page)
          
     
     
