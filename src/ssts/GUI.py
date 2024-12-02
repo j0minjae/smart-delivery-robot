@@ -38,7 +38,7 @@ class gui(Node):
         self.data_manager.robot_serve_update.connect(self.move_to_table)
         self.data_manager.log_signal.connect(self.kitchen_display_emit_log)
 
-        self.order_service = self.create_service(PlaceOrder,'/order', self.qos_profile, self.order_callback)
+        self.order_service = self.create_service(PlaceOrder,'/order', qos_profile=self.qos_profile, callback=self.order_callback)
         self.log_sub = self.create_subscription(Log, '/rosout', self.log_callback, self.qos_profile)
         self.send_menu = ActionClient(self,NavigateToPose, 'navigate_to_pose')
 

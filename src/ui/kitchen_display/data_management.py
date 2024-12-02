@@ -92,6 +92,8 @@ class DataManager(QObject):
     logs_update = pyqtSignal()
     robot_serve_update = pyqtSignal(int)#table id or home(0)
     log_signal = pyqtSignal(str,int) # msg, log level
+    chart_update = pyqtSignal()
+    chart_signal = pyqtSignal()
 
 
     def __init__(self, tables:list[TableInfo]=list(), tickets:list[OrderTicket]=list()):
@@ -100,6 +102,7 @@ class DataManager(QObject):
         self.tables = [TableManager(table) for table in tables]
         self.tickets = [TicketManager(ticket) for ticket in tickets]
         self.logs:list[Log] = []
+        self.chart_data = None
 
     def refresh_all(self):
         self.refresh_tables()
@@ -110,6 +113,9 @@ class DataManager(QObject):
     
     def refresh_tickets(self):
         self.tickets_update.emit()
+    
+    def refresh_chart(self):
+        self.chart_signal.emit()
 
     def refresh_logs(self):
         self.logs_update.emit()
@@ -162,9 +168,14 @@ class DataManager(QObject):
 
     def emit_log(self, message, level:int=20):
         self.log_signal.emit(message,level)
+    
+    def emit_chart_signal(self):
+        self.chart_signal.emit()
 
     def create_log(self, log:Log):
         self.logs.append(log)
         self.refresh_logs()
 
+    def set_chart(self, chart_data):
+        self.chart_data = chart_data
 
