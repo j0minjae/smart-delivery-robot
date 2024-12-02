@@ -2,7 +2,7 @@ import sys
 from datetime import datetime
 
 from DTO import TableInfo, OrderTicket, MenuItem
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QLabel
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QLabel, QVBoxLayout
 from PyQt5.QtCore import pyqtSlot, QFile, QTextStream, Qt
 
 from .data_management import DataManager, TableManager, TicketManager
@@ -10,6 +10,9 @@ from .widgets.main_ui import Ui_MainWindow
 from .widgets.order_label_ui import Ui_order_label_container as Ui_Order_Label
 from .widgets.order_ticket_ui import Ui_Form as Ui_Order_Ticket
 from .widgets.table_info_ui import Ui_Form as Ui_Table_Info
+
+from PyQt5.QtChart import QChart, QChartView, QBarSet, QBarSeries, QBarCategoryAxis, QValueAxis
+from PyQt5.QtGui import QPainter
 
 class SingleOrder:
     def __init__(self, menu_id, quantity):
@@ -178,7 +181,9 @@ class MainWindow(QMainWindow):
         self.table_layout = self.ui.table_info_layout
         self.ticket_layout =  self.ui.order_tickets_layout
         self.log_browser = self.ui.order_page_log_browser
-        self.chart_browser = self.ui.chat_text_browser
+        self.week_chart_widget = self.ui.chart_a_layout
+        self.month_chart_widget = self.ui.chart_b_layout
+        self.menu_chart_widget = self.ui.chart_c_layout
 
         self.page = 0
         self.ui.stackedWidget.setCurrentIndex(self.page)
@@ -238,7 +243,56 @@ class MainWindow(QMainWindow):
 
     def render_chart(self):
         data = self.data_manager.chart_data
-        self.chart_browser.setText(str(data))
+        if data == None:
+            self.data_manager.emit_log("no chart data",level=30)
+            return
+        
+        week_data, month_data, menu_data = data['week'], data['month'], data['menu']
+        
+        week_chart = self.make_chart("week",week_data)
+        month_chart = self.make_chart("month",month_data)
+        menu_chart = self.make_chart("menu",menu_data)
+
+        self.week_chart_widget.addWidget(week_chart)
+        self.month_chart_widget.addWidget(month_chart)
+        self.menu_chart_widget.addWidget(menu_chart)
+
+    def make_chart(self, name, data):
+        set0 = QBarSet(name)
+        for item in data:
+            set0.append(item[1])
+        
+        series = QBarSeries()
+        series.append(set0)
+
+        chart = QChart()
+        chart.addSeries(series)
+        chart.setTitle(name)
+        chart.setAnimationOptions(QChart.SeriesAnimations)
+
+        categories = [str(item[0]) for item in data]
+        axisX = QBarCategoryAxis()
+        axisX.append(categories)
+        chart.addAxis(axisX, Qt.AlignBottom)
+        series.attachAxis(axisX)
+
+        # Y축 설정 (값 축)
+        axisY = QValueAxis()
+        max_y = max([item[1] for item in data]) + 100000
+        axisY.setRange(0, max_y)  # Y축 범위 설정
+        chart.addAxis(axisY, Qt.AlignLeft)
+        series.attachAxis(axisY)
+
+        # 차트 뷰 생성
+        chart_view = QChartView(chart)
+        chart_view.setRenderHint(QPainter.Antialiasing)
+
+        # layout = QVBoxLayout()
+        # layout.addWidget(chart_view)
+
+        return chart_view
+        
+
 
     def clear_ticket_layout(self):
         for i in reversed(range(self.ticket_layout.count())):
