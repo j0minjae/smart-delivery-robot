@@ -137,7 +137,7 @@ class gui(Node):
             
             # 목표 지점에서 5초 대기
             if self.current_goal != 0:  # 복귀 목표가 아니라면
-                self.get_logger().info("Waiting for 7 seconds before returning...")
+                self.get_logger().info("Waiting for 5 seconds before returning...")
                 time.sleep(5)
                 self.get_logger().info("Switching to return goal (table_id='0').")
                 self.send_goal(0)  # 복귀 지점으로 목표 전환 변경

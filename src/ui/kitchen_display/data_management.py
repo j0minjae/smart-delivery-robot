@@ -146,7 +146,7 @@ class DataManager(QObject):
             self.control_robot(table_id)
     
     def call_robot(self):
-        self.control_robot(0)
+        self.control_robot(7) #임의로 설정
 
     def control_robot(self,table_id:int):
         print(f"contorl_robot: {table_id}로 이동명령")
