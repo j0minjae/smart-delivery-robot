@@ -368,7 +368,7 @@ class CafeMenuApp(QMainWindow):
         for k, v in self.cart.items():
             orders[self.menu_id[k]] = v["quantity"]
         order = MiddleNode()
-        order.send_order_to_tabla_order(random.randint(1, 10), orders)
+        order.send_order_to_tabla_order(random.randint(1, 9), orders)
 
         total_price = sum(details["price"] * details["quantity"] for details in self.cart.values())
         order_details = [

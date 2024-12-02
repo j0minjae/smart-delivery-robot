@@ -1,8 +1,9 @@
 import copy
 from rcl_interfaces.msg import Log
+from datetime import datetime
 from DTO import MenuItem, OrderTicket, TableInfo
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget
-from PyQt5.QtCore import QFile, QTextStream, Qt, QObject, pyqtSignal
+from PyQt5.QtCore import QFile, QTextStream, Qt, QObject, pyqtSignal, QTimer
 
 menu_price_map = {
     1: 130000,
@@ -35,6 +36,9 @@ class TableManager(QObject):
     def update_table(self, table:TableInfo=None):
         if table:
             self.model = table
+        
+        if self.model.arrival_time == None:
+            self.model.arrival_time = datetime.now()
         self.table_update.emit()
 
 class TicketManager(QObject):
@@ -45,6 +49,14 @@ class TicketManager(QObject):
 
         self.model = ticket
         self.is_disable = False
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.increase_time)
+        self.timer.start(1000)
+
+    def increase_time(self):
+        self.model.elapsed += 1
+        print("increase")
+        self.update_ticket()
 
     def set_order(self, order):
         self.model.order = order
@@ -83,6 +95,7 @@ class TicketManager(QObject):
         
         if is_all_menu_disable:
             self.is_disable = True
+            self.timer.stop()
         self.update_ticket()
 
     def get_is_checked_menu_and_table_id(self):
@@ -173,7 +186,7 @@ class DataManager(QObject):
             self.control_robot(table_id)
     
     def call_robot(self):
-        self.control_robot(7) #임의로 설정
+        self.control_robot(0) #임의로 설정
 
     def control_robot(self,table_id:int):
         self.emit_log(f"Command robot to go table:{table_id}")
@@ -192,5 +205,4 @@ class DataManager(QObject):
     def set_chart(self, chart_data):
         self.chart_data = chart_data
         self.refresh_chart()
-        print(chart_data)
 
