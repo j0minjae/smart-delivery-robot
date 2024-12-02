@@ -37,12 +37,13 @@ class TableManager(QObject):
         if table:
             self.model = table
         
-        if self.model.arrival_time == None:
-            self.model.arrival_time = datetime.now()
+            if self.model.arrival_time == None:
+                self.model.arrival_time = datetime.now()
         self.table_update.emit()
 
 class TicketManager(QObject):
     ticket_update = pyqtSignal()
+    timer_update = pyqtSignal()
 
     def __init__(self, ticket:OrderTicket=None):
         super().__init__()
@@ -55,8 +56,7 @@ class TicketManager(QObject):
 
     def increase_time(self):
         self.model.elapsed += 1
-        print("increase")
-        self.update_ticket()
+        self.timer_update.emit()
 
     def set_order(self, order):
         self.model.order = order

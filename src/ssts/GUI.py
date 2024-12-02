@@ -188,38 +188,6 @@ class gui(Node):
                 self.get_logger().info("Return goal reached. Shutting down.")
         else:
             self.get_logger().warn(f"Goal failed with status: {result.status}")
-    
-    # def movement(self, target_pose):
-    #     movement = PoseStamped()
-    #     movement.header.frame_id = 'map'  # SLAM에서 사용되는 좌표계 (보통 'map' 프레임)
-    #     movement.header.stamp = self.get_clock().now().to_msg()
-    #     movement.pose.position.x = target_pose.position.x
-    #     movement.pose.position.y = target_pose.position.y
-    #     movement.pose.orientation = target_pose.orientation
-    #     self.send_menu.wait_for_server()
-    #     self.get_logger().info(f'complete to serve')
-    #     goal = NavigateToPose.Goal()
-    #     goal.pose = movement
-    #     self.send_menu.send_goal_async(
-    #         goal,
-    #         feedback_callback=self.feedback_callback
-    #     ).add_done_callback(self.goal_response_callback)
-
-    # def feedback_callback(self, feedback_msg):
-    #     feedback = feedback_msg.feedback
-    #     self.get_logger().info(f"Current progress: {feedback.current_pose}")
-
-    # def goal_response_callback(self, future):
-    #     goal_handle = future.result()
-    #     if not goal_handle.accepted:
-    #         self.get_logger().info('Goal rejected :(')
-    #         return
-    #     self.get_logger().info('Goal accepted :)')
-    #     goal_handle.get_result_async().add_done_callback(self.get_result_callback)
-
-    # def get_result_callback(self, future):
-    #     result = future.result().result
-    #     self.get_logger().info(f'Result: {result}')
 
     def call_log(self):
         return self.db.call_log()

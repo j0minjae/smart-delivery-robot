@@ -3,7 +3,7 @@ from datetime import datetime
 
 from DTO import TableInfo, OrderTicket, MenuItem
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QLabel, QVBoxLayout
-from PyQt5.QtCore import pyqtSlot, QFile, QTextStream, Qt
+from PyQt5.QtCore import pyqtSlot, QFile, QTextStream, Qt, QTimer
 
 from .data_management import DataManager, TableManager, TicketManager
 from .widgets.main_ui import Ui_MainWindow
@@ -72,7 +72,6 @@ class TableInfoWidget(QWidget):
         self.first_order_time = self.table_info_ui.first_order_time
         self.total_amount = self.table_info_ui.total_amount
         self.order_layout = self.table_info_ui.order_layout
-        
 
         self.data_manager.update_table()
 
@@ -122,6 +121,7 @@ class OrderTicketWidget(QWidget):
         self.order_ticket_ui.setupUi(self)
 
         self.data_manager.ticket_update.connect(self.update_widget)
+        self.data_manager.timer_update.connect(self.update_time)
         
         self.table_num = self.order_ticket_ui.table_num
         self.table_num = self.order_ticket_ui.table_num
@@ -129,8 +129,19 @@ class OrderTicketWidget(QWidget):
 
         self.order_layout = self.order_ticket_ui.orders
 
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.timer_callback)
+        self.timer.start(1000)
+
         self.set_order(self.data_manager.model.order)
         self.update_widget()
+
+    def update_time(self):
+        time = self.data_manager.model.elapsed
+        self.set_time(str(time))
+    
+    def timer_callback(self):
+        self.data_manager.increase_time()
 
     def set_table_num(self, table_num):
         self.table_num.setText(str(table_num))
