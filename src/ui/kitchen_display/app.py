@@ -236,6 +236,14 @@ class MainWindow(QMainWindow):
             column = i%3
             self.table_layout.addWidget(table,row,column)
 
+    def clear_layout(self,layout):
+        for i in reversed(range(layout.count())):
+            item = layout.itemAt(i)
+            if item is not None:
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+
     def clear_table_layout(self):
         for i in reversed(range(self.table_layout.count())):
             item = self.table_layout.itemAt(i)
@@ -266,6 +274,10 @@ class MainWindow(QMainWindow):
         if data == None:
             self.data_manager.emit_log("no chart data",level=30)
             return
+        
+        self.clear_layout(self.week_chart_widget)
+        self.clear_layout(self.month_chart_widget)
+        self.clear_layout(self.menu_chart_widget)
         
         week_data, month_data, menu_data = data['week'], data['month'], data['menu']
         
