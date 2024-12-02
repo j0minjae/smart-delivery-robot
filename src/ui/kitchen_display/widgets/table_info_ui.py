@@ -68,6 +68,10 @@ class Ui_Form(object):
         self.first_order_time.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.first_order_time.setObjectName("first_order_time")
         self.horizontalLayout_3.addWidget(self.first_order_time)
+        self.clear_table_btn = QtWidgets.QPushButton(self.widget)
+        self.clear_table_btn.setMaximumSize(QtCore.QSize(20, 16777215))
+        self.clear_table_btn.setObjectName("clear_table_btn")
+        self.horizontalLayout_3.addWidget(self.clear_table_btn)
         self.verticalLayout_3.addWidget(self.widget)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
@@ -106,6 +110,7 @@ class Ui_Form(object):
         self.label.setText(_translate("Form", "테이블"))
         self.table_num.setText(_translate("Form", "9"))
         self.first_order_time.setText(_translate("Form", "1:30 PM"))
+        self.clear_table_btn.setText(_translate("Form", "X"))
         self.label_6.setText(_translate("Form", "결제금액:"))
         self.total_amount.setText(_translate("Form", "10000"))
 

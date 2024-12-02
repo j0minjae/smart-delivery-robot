@@ -72,8 +72,12 @@ class TableInfoWidget(QWidget):
         self.first_order_time = self.table_info_ui.first_order_time
         self.total_amount = self.table_info_ui.total_amount
         self.order_layout = self.table_info_ui.order_layout
+        self.table_info_ui.clear_table_btn.clicked.connect(self.clear_table)
 
         self.data_manager.update_table()
+
+    def clear_table(self):
+        self.data_manager.clear_table()
 
     def set_table_num(self, table_num):
         self.table_num.setText(str(table_num))
@@ -128,6 +132,7 @@ class OrderTicketWidget(QWidget):
         self.time_since_order = self.order_ticket_ui.time_since_order
 
         self.order_layout = self.order_ticket_ui.orders
+        self.order_ticket_ui.delete_btn.clicked.connect(self.callback_delete_btn)
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.timer_callback)
@@ -135,6 +140,9 @@ class OrderTicketWidget(QWidget):
 
         self.set_order(self.data_manager.model.order)
         self.update_widget()
+
+    def callback_delete_btn(self):
+        self.data_manager.delete_ticket()
 
     def update_time(self):
         time = self.data_manager.model.elapsed

@@ -41,18 +41,24 @@ class TableManager(QObject):
                 self.model.arrival_time = datetime.now()
         self.table_update.emit()
 
+    def clear_table(self):
+        self.model.arrival_time = None
+        self.model.order = []
+        self.model.payment = 0
+        self.model.status = False
+        self.update_table()
+
+
 class TicketManager(QObject):
     ticket_update = pyqtSignal()
     timer_update = pyqtSignal()
 
-    def __init__(self, ticket:OrderTicket=None):
+    def __init__(self, data_manager, ticket:OrderTicket=None):
         super().__init__()
 
         self.model = ticket
+        self.data_manager = data_manager
         self.is_disable = False
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.increase_time)
-        self.timer.start(1000)
 
     def increase_time(self):
         self.model.elapsed += 1
@@ -107,6 +113,9 @@ class TicketManager(QObject):
                 return True, self.model.table_id
         
         return False, self.model.table_id
+    
+    def delete_ticket(self):
+        self.data_manager.delete_ticket(self)
 
 class DataManager(QObject):
     tables_update = pyqtSignal()
@@ -122,7 +131,7 @@ class DataManager(QObject):
         super().__init__()
         
         self.tables = [TableManager(table) for table in tables]
-        self.tickets = [TicketManager(ticket) for ticket in tickets]
+        self.tickets = [TicketManager(self,ticket) for ticket in tickets]
         self.logs:list[Log] = []
         self.chart_data = None
 
@@ -146,7 +155,7 @@ class DataManager(QObject):
         for menu in ticket.order:
             menu.is_checked = False
             menu.is_disable = False
-        self.tickets.insert(0, TicketManager(ticket))
+        self.tickets.insert(0, TicketManager(self,ticket))
 
         self.refresh_tickets()
 
@@ -205,4 +214,9 @@ class DataManager(QObject):
     def set_chart(self, chart_data):
         self.chart_data = chart_data
         self.refresh_chart()
+    
+    def delete_ticket(self, ticket_manager):
+        if ticket_manager in self.tickets:
+            self.tickets.remove(ticket_manager)
+        self.refresh_tickets()
 

@@ -136,6 +136,19 @@ color: white;</string>
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QPushButton" name="clear_table_btn">
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>X</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
