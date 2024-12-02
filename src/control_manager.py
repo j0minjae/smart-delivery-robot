@@ -23,7 +23,7 @@ class InitialPose(Node):
         self.initial_status = False
         # 서비스 대기
         while not self.set_initial_pose_service_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('Service /set_initial_pose not available, waiting again...')
+            self.get_logger().error('inital pose error. please turn on rviz')
 
         # 초기 포즈 설정
         self.set_initial_pose(*self.init_pose)
