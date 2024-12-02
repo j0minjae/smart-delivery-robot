@@ -175,7 +175,7 @@ class OrderTicketWidget(QWidget):
     def update_widget(self):
         model = self.data_manager.model
         
-        self.setDisabled(self.data_manager.is_disable)
+        # self.setDisabled(self.data_manager.is_disable)
         self.set_table_num(model.table_id)
         self.set_time(str(model.elapsed))
         self.update_order()
