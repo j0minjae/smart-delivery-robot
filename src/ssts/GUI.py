@@ -35,10 +35,11 @@ class gui(Node):
         self.data_manager.robot_serve_update.connect(self.move_to_table)
         self.data_manager.log_signal.connect(self.kitchen_display_emit_log)
 
-        self.order_service = self.create_service(PlaceOrder,'/order', self.order_callback)
-        self.log_sub = self.create_subscription(Log, '/rosout', self.log_callback, 10)
+        self.order_service = self.create_service(PlaceOrder,'/order', qos_profile=self.qos_profile, callback=self.order_callback)
+        self.log_sub = self.create_subscription(Log, '/rosout', self.log_callback, self.qos_profile)
         # self.send_menu = ActionClient(self,NavigateToPose, 'navigate_to_pose')
         self.Nav2_action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
+        self.kitchen_display_logger = self.get_logger().get_child("kitchen_display")
         
         # 사전 정의된 목표 좌표
         self.set_nav2_pose = {
@@ -55,13 +56,22 @@ class gui(Node):
         }
         self.current_goal = None  # 현재 목표 ID
 
-    # def euler_to_quaternion(self, roll, pitch, yaw):
-    #     # Convert Euler angles to a quaternion
-    #     qx = math.sin(roll / 2) * math.cos(pitch / 2) * math.cos(yaw / 2) - math.cos(roll / 2) * math.sin(pitch / 2) * math.sin(yaw / 2)
-    #     qy = math.cos(roll / 2) * math.sin(pitch / 2) * math.cos(yaw / 2) + math.sin(roll / 2) * math.cos(pitch / 2) * math.sin(yaw / 2)
-    #     qz = math.cos(roll / 2) * math.cos(pitch / 2) * math.sin(yaw / 2) - math.sin(roll / 2) * math.sin(pitch / 2) * math.cos(yaw / 2)
-    #     qw = math.cos(roll / 2) * math.cos(pitch / 2) * math.cos(yaw / 2) + math.sin(roll / 2) * math.sin(pitch / 2) * math.sin(yaw / 2)
-    #     return Quaternion(x=qx, y=qy, z=qz, w=qw)
+    def kitchen_display_emit_log(self, message, level):
+        if level == 10:
+            # self.kitchen_display_logger.debug(message)
+            self.get_logger().debug(message)
+        elif level ==20:
+            # self.kitchen_display_logger.info(message)
+            self.get_logger().info(message)
+        elif level ==30:
+            # self.kitchen_display_logger.warn(message)
+            self.get_logger().warn(message)
+        elif level ==40:
+            # self.kitchen_display_logger.error(message)
+            self.get_logger().error(message)
+        elif level ==50:
+            # self.kitchen_display_logger.fatal(message)
+            self.get_logger().fatal(message)
 
     def log_callback(self, msg):
         self.db.update_log(msg)
@@ -82,6 +92,11 @@ class gui(Node):
                 orders = [MenuItem(menu.menu_id, menu.quantity) for menu in orders]
                 ticket = OrderTicket(table_id, order=orders)
                 self.data_manager.create_order(ticket)
+            
+            self.get_logger().info("주문이 들어왔습니다")
+
+        except:
+            self.get_logger().warn(f'주문 시스템에 문제가 발생했습니다')    #send ui
 
         response.success = True
         return response
