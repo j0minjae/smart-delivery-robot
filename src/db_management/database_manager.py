@@ -84,55 +84,51 @@ class OrderManager:
 
     # 테이블: 주문수락 데이터 추출 및 삽입
     def insert_order(self, table_id, orders):
-        try:
-            db_path = self.get_resource_file_path()
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-            """
-            주문이 수락되면 database에 추가되도록 처리하며,
-            menu 테이블이 비어 있는 경우 메시지를 출력합니다.
-            ex)
-            <input>
-            place_order = {
-                "table_id": 5,
-                "orders": [
-                    {"menu_id": "1", "quantity": 2},
-                    {"menu_id": "2", "quantity": 2},
-                    {"menu_id": "3", "quantity": 2}
-                ]
-            }
+        db_path = self.get_resource_file_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
 
-            <result>
-            order_id  time_stamp           table_id  menu_id  menu_name  total_price
-            --------  -------------------  --------  -------  ---------  -----------
-            1         2024-11-28 12:21:24  5         1        로스카츠       20,000     
-            2         2024-11-28 12:21:24  5         2        히레카츠       22,000     
-            3         2024-11-28 12:21:24  5         3        모둠카츠       32,000     
-            4         2024-11-28 12:23:34  5         1        로스카츠       20,000     
+        """
+        주문이 수락되면 database에 추가되도록 처리하며,
+        menu 테이블이 비어 있는 경우 메시지를 출력합니다.
+        ex)
+        <input>
+        place_order = {
+            "table_id": 5,
+            "orders": [
+                {"menu_id": "1", "quantity": 2},
+                {"menu_id": "2", "quantity": 2},
+                {"menu_id": "3", "quantity": 2}
+            ]
+        }
+        <result>
+        order_id  time_stamp           table_id  menu_id  menu_name  total_price
+        --------  -------------------  --------  -------  ---------  -----------
+        1         2024-11-28 12:21:24  5         1        로스카츠       20,000     
+        2         2024-11-28 12:21:24  5         2        히레카츠       22,000     
+        3         2024-11-28 12:21:24  5         3        모둠카츠       32,000     
+        4         2024-11-28 12:23:34  5         1        로스카츠       20,000     
+        """
 
-            """
-            # SQLite DB 연결
-            print('## Execute(insert_order) ##')
+        # SQLite DB 연결
+        print('## Execute(insert_order) ##')
+        # orders 테이블 생성 (menu_name 열 추가)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS orders (
+                order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                time_stamp TEXT,
+                table_id INTEGER,
+                menu_id INTEGER,
+                menu_name TEXT,
+                total_price INTEGER
+            );
+        ''')
+        conn.commit()
+        print("- Table(orders) created (if it did not exist).")
 
-            # orders 테이블 생성 (menu_name 열 추가)
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS orders (
-                    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    time_stamp TEXT,
-                    table_id INTEGER,
-                    menu_id INTEGER,
-                    menu_name TEXT,
-                    total_price INTEGER
-                );
-            ''')
-            conn.commit()
-            print("- Table(orders) created (if it did not exist).")
-
-            # 메뉴 테이블 확인
-            cursor.execute('SELECT COUNT(*) FROM menu;')
-            menu_count = cursor.fetchone()[0]  # 메뉴 데이터 개수 확인
-        except:
-            self.get_logger().info(f'DB 시스템에 문제가 발생했습니다')    #send ui
+        # 메뉴 테이블 확인
+        cursor.execute('SELECT COUNT(*) FROM menu;')
+        menu_count = cursor.fetchone()[0]  # 메뉴 데이터 개수 확인
 
         if menu_count == 0:
             print("Menu is empty. No orders can be processed.")
@@ -243,42 +239,10 @@ class OrderManager:
             ORDER BY date;
         ''', (start_date_str,))
 
-        sales_data = cursor.fetchall()
+        month_data = cursor.fetchall()
 
-        # 데이터가 있을 경우 꺾은선 그래프 생성
-        if sales_data:
-            # pandas DataFrame으로 변환
-            df = pd.DataFrame(sales_data, columns=['Date', 'Daily Sales'])
-            df['Date'] = pd.to_datetime(df['Date'])  # 날짜 형식 변환
-            df['Daily Sales (KRW in 10k)'] = df['Daily Sales'] / 10000  # 만 원 단위로 변환
-
-            # seaborn을 이용한 꺾은선 그래프
-            plt.figure(figsize=(10, 6))
-            ax = sns.lineplot(x='Date', y='Daily Sales (KRW in 10k)', data=df, marker='o', color='b')
-
-            # 각 데이터 포인트에 값 표시 (만원 단위)
-            for i, row in df.iterrows():
-                ax.text(row['Date'], row['Daily Sales (KRW in 10k)'], 
-                        f'{row["Daily Sales (KRW in 10k)"]:.1f} (10k)', 
-                        color='black', ha='center', va='bottom')  # va는 value 위치 설정 (위쪽, 아래쪽)
-
-            # 그래프 레이블 및 제목 설정
-            plt.xlabel('Date')
-            plt.ylabel('Daily Sales (KRW in 10k)')
-            plt.title(f'Daily Sales for the Last {days} Days ({start_date_str} to {datetime.now().strftime("%Y-%m-%d")})')
-            plt.xticks(rotation=45)
-            plt.grid(True)
-            plt.tight_layout()
-            plt.show()
-        else:
-            # 데이터가 없으면 로그 메시지 출력
-            print(f"No sales data available for the last {days} days.")
-
-        
-    # 통계: 일주일간 요일 별 매출(막대 그래프), 수정 필요
-    # def generate_weekday_sales_graph(self):
-        # 오늘 날짜와 6일 전 날짜 계산
         today = datetime.today()
+        end_of_today = (today + timedelta(days=1)).strftime('%Y-%m-%d 00:00:00')  # 내일 0시까지 포함
         one_week_ago = today - timedelta(days=6)
 
         # 날짜별 매출 데이터 가져오기
@@ -289,48 +253,100 @@ class OrderManager:
             WHERE time_stamp BETWEEN ? AND ?
             GROUP BY sales_date
             ORDER BY sales_date;
-        ''', (one_week_ago.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d')))
+        ''', (one_week_ago.strftime('%Y-%m-%d 00:00:00'), end_of_today))
 
-        sales_data = cursor.fetchall()
+        weekend_data = cursor.fetchall()
 
-        if sales_data:
-            # DataFrame으로 변환
-            df = pd.DataFrame(sales_data, columns=['Sales Date', 'Total Sales'])
-            df['Sales Date'] = pd.to_datetime(df['Sales Date'])  # 날짜 형식 변환
-            df['Day of Week'] = df['Sales Date'].dt.day_name()  # 요일 추출
+        # 데이터가 있을 경우 꺾은선 그래프 생성
+        if weekend_data:
+            if month_data:
+                # # pandas DataFrame으로 변환
+                # df = pd.DataFrame(sales_data, columns=['Date', 'Daily Sales'])
+                # df['Date'] = pd.to_datetime(df['Date'])  # 날짜 형식 변환
+                # df['Daily Sales (KRW in 10k)'] = df['Daily Sales'] / 10000  # 만 원 단위로 변환
 
-            # 요일 순서 지정
-            days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+                # # seaborn을 이용한 꺾은선 그래프
+                # plt.figure(figsize=(10, 6))
+                # ax = sns.lineplot(x='Date', y='Daily Sales (KRW in 10k)', data=df, marker='o', color='b')
 
-            # 매출이 있는 요일만 선택
-            filtered_df = df[df['Total Sales'] > 0]
+                # # 각 데이터 포인트에 값 표시 (만원 단위)
+                # for i, row in df.iterrows():
+                #     ax.text(row['Date'], row['Daily Sales (KRW in 10k)'], 
+                #             f'{row["Daily Sales (KRW in 10k)"]:.1f} (10k)', 
+                #             color='black', ha='center', va='bottom')  # va는 value 위치 설정 (위쪽, 아래쪽)
 
-            # Seaborn 막대 그래프 생성
-            plt.figure(figsize=(10, 6))
-            ax = sns.barplot(
-                x='Day of Week', 
-                y='Total Sales', 
-                data=filtered_df, 
-                order=[day for day in days_of_week if day in filtered_df['Day of Week'].values], 
-                palette='Blues'
-            )
-
-            # 각 데이터 포인트에 값 표시
-            for i, row in filtered_df.iterrows():
-                ax.text(i, row['Total Sales'] + 500,  # 약간의 오프셋
-                        f'{row["Total Sales"]:,}', 
-                        color='black', ha='center', va='bottom')
-            conn.close()
-            # 그래프 제목 및 레이블
-            plt.xlabel('Day of Week')
-            plt.ylabel('Total Sales (KRW)')
-            plt.title(f'Weekly Sales by Day ({one_week_ago.strftime("%Y-%m-%d")} to {today.strftime("%Y-%m-%d")})')
-            plt.xticks(rotation=45)  # X축 레이블 회전
-            plt.grid(True)
-            plt.tight_layout()
-            plt.show()
+                # # 그래프 레이블 및 제목 설정
+                # plt.xlabel('Date')
+                # plt.ylabel('Daily Sales (KRW in 10k)')
+                # plt.title(f'Daily Sales for the Last {days} Days ({start_date_str} to {datetime.now().strftime("%Y-%m-%d")})')
+                # plt.xticks(rotation=45)
+                # plt.grid(True)
+                # plt.tight_layout()
+                # plt.show()
+                return weekend_data, month_data
+            else:
+                weekend_data, False
         else:
-            print("No sales data available for the last week.")
+            # 데이터가 없으면 로그 메시지 출력
+            return False, 
+
+        
+    # 통계: 일주일간 요일 별 매출(막대 그래프), 수정 필요
+    # def generate_weekday_sales_graph(self):
+        # 오늘 날짜와 6일 전 날짜 계산
+        # today = datetime.today()
+        # one_week_ago = today - timedelta(days=6)
+
+        # # 날짜별 매출 데이터 가져오기
+        # cursor.execute('''
+        #     SELECT DATE(time_stamp) as sales_date,
+        #         SUM(CAST(REPLACE(total_price, ',', '') AS INTEGER)) as total_sales
+        #     FROM orders
+        #     WHERE time_stamp BETWEEN ? AND ?
+        #     GROUP BY sales_date
+        #     ORDER BY sales_date;
+        # ''', (one_week_ago.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d')))
+
+        # sales_data = cursor.fetchall()
+
+        # if sales_data:
+        #     # DataFrame으로 변환
+        #     df = pd.DataFrame(sales_data, columns=['Sales Date', 'Total Sales'])
+        #     df['Sales Date'] = pd.to_datetime(df['Sales Date'])  # 날짜 형식 변환
+        #     df['Day of Week'] = df['Sales Date'].dt.day_name()  # 요일 추출
+
+        #     # 요일 순서 지정
+        #     days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+        #     # 매출이 있는 요일만 선택
+        #     filtered_df = df[df['Total Sales'] > 0]
+
+        #     # Seaborn 막대 그래프 생성
+        #     plt.figure(figsize=(10, 6))
+        #     ax = sns.barplot(
+        #         x='Day of Week', 
+        #         y='Total Sales', 
+        #         data=filtered_df, 
+        #         order=[day for day in days_of_week if day in filtered_df['Day of Week'].values], 
+        #         palette='Blues'
+        #     )
+
+        #     # 각 데이터 포인트에 값 표시
+        #     for i, row in filtered_df.iterrows():
+        #         ax.text(i, row['Total Sales'] + 500,  # 약간의 오프셋
+        #                 f'{row["Total Sales"]:,}', 
+        #                 color='black', ha='center', va='bottom')
+        #     conn.close()
+        #     # 그래프 제목 및 레이블
+        #     plt.xlabel('Day of Week')
+        #     plt.ylabel('Total Sales (KRW)')
+        #     plt.title(f'Weekly Sales by Day ({one_week_ago.strftime("%Y-%m-%d")} to {today.strftime("%Y-%m-%d")})')
+        #     plt.xticks(rotation=45)  # X축 레이블 회전
+        #     plt.grid(True)
+        #     plt.tight_layout()
+        #     plt.show()
+        # else:
+        #     print("No sales data available for the last week.")
     
     # 통계: 지난 일주일간 요일별 매출 매출 0이면 안뜸
     def generate_weekday_sales_graph(self):
@@ -414,49 +430,51 @@ class OrderManager:
 
         # 데이터가 있을 경우 메뉴별 매출 계산 및 그래프 생성
         if sales_data:
+            return sales_data
             # 메뉴 ID와 메뉴 이름 매칭하기 위한 dict 준비
-            menu_names = {}
-            cursor.execute('SELECT menu_id, menu_name FROM menu;')
-            menu_data = cursor.fetchall()
+            # menu_names = {}
+            # cursor.execute('SELECT menu_id, menu_name FROM menu;')
+            # menu_data = cursor.fetchall()
 
-            # menu_id와 menu_name을 매핑
-            for menu in menu_data:
-                menu_names[menu[0]] = menu[1]
+            # # menu_id와 menu_name을 매핑
+            # for menu in menu_data:
+            #     menu_names[menu[0]] = menu[1]
 
-            # pandas DataFrame으로 변환
-            df = pd.DataFrame(sales_data, columns=['Menu ID', 'Total Sales'])
+            # # pandas DataFrame으로 변환
+            # df = pd.DataFrame(sales_data, columns=['Menu ID', 'Total Sales'])
 
-            # 메뉴 이름을 'Menu Name' 열에 추가
-            df['Menu Name'] = df['Menu ID'].map(menu_names)
+            # # 메뉴 이름을 'Menu Name' 열에 추가
+            # df['Menu Name'] = df['Menu ID'].map(menu_names)
 
-            # 메뉴 ID를 문자열로 처리하고 매출을 만 원 단위로 변환
-            df['Menu ID'] = df['Menu ID'].astype(str)
-            df['Total Sales (KRW in 10k)'] = df['Total Sales'] / 10000  # 만 원 단위로 변환
+            # # 메뉴 ID를 문자열로 처리하고 매출을 만 원 단위로 변환
+            # df['Menu ID'] = df['Menu ID'].astype(str)
+            # df['Total Sales (KRW in 10k)'] = df['Total Sales'] / 10000  # 만 원 단위로 변환
 
-            # seaborn을 이용한 막대 그래프
-            plt.figure(figsize=(10, 6))
-            ax = sns.barplot(x='Menu Name', y='Total Sales (KRW in 10k)', data=df, palette='Blues')
+            # # seaborn을 이용한 막대 그래프
+            # plt.figure(figsize=(10, 6))
+            # ax = sns.barplot(x='Menu Name', y='Total Sales (KRW in 10k)', data=df, palette='Blues')
 
-            # 각 데이터 포인트에 값 표시
-            for i, row in df.iterrows():
-                ax.text(i, row['Total Sales (KRW in 10k)'] + 0.1,  # 약간의 오프셋을 주어 값이 막대 위에 표시되도록 함
-                        f'{row["Total Sales (KRW in 10k)"]:.1f} (10k)', 
-                        color='black', ha='center', va='bottom')
-            conn.close()
-            # 그래프 제목 및 레이블
-            plt.xlabel('Menu Name')
-            plt.ylabel('Total Sales (KRW in 10k)')
-            plt.title(f'Menu Sales from {start_date} to {end_date}')
-            plt.xticks(rotation=45)
-            plt.grid(True)
+            # # 각 데이터 포인트에 값 표시
+            # for i, row in df.iterrows():
+            #     ax.text(i, row['Total Sales (KRW in 10k)'] + 0.1,  # 약간의 오프셋을 주어 값이 막대 위에 표시되도록 함
+            #             f'{row["Total Sales (KRW in 10k)"]:.1f} (10k)', 
+            #             color='black', ha='center', va='bottom')
+            # conn.close()
+            # # 그래프 제목 및 레이블
+            # plt.xlabel('Menu Name')
+            # plt.ylabel('Total Sales (KRW in 10k)')
+            # plt.title(f'Menu Sales from {start_date} to {end_date}')
+            # plt.xticks(rotation=45)
+            # plt.grid(True)
 
-            # 레이아웃 자동 조정 (그래프와 레이블 간격)
-            plt.tight_layout()
-            plt.show()
+            # # 레이아웃 자동 조정 (그래프와 레이블 간격)
+            # plt.tight_layout()
+            # plt.show()
 
         else:
             # 데이터가 없으면 로그 메시지 출력
-            print(f"No sales data available for the period from {start_date} to {end_date}.")
+            return False
+
     
     # database 닫기
     # def close_database(self):
