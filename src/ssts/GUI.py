@@ -128,6 +128,18 @@ class gui(Node):
         result = future.result().result
         self.get_logger().info(f'Result: {result}')
 
+    def get_sales_data(self):
+        a, b = self.db.generate_sales_graph()
+        c = self.db.generate_menu_sales_graph()
+        
+        if a == False:
+            self.get_logger().info("주차별 매출 데이터가 충분히 쌓이지 않았습니다.")
+        if b == False:
+            self.get_logger().info("월별 매출 데이터가 충분히 쌓이지 않았습니다.")
+        if c == False:
+            self.get_logger().info("메뉴별 매출 데이터가 충분히 쌓이지 않았습니다.")
+        return a, b, c
+
     def call_log(self):
         return self.db.call_log()
     
