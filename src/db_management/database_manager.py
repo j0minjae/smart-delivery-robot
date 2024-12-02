@@ -410,7 +410,7 @@ class OrderManager:
             print("No sales data available for the last week.")
 
     # 통계: 메뉴별 매출 시각화 (날짜 범위 입력)
-    def generate_menu_sales_graph(self,date):
+    def generate_menu_sales_graph(self,date=('0001-01-01', '9999-12-31')):
         db_path = self.get_resource_file_path()
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()

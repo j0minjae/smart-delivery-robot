@@ -115,7 +115,7 @@ class DataManager(QObject):
         self.tickets_update.emit()
     
     def refresh_chart(self):
-        self.chart_signal.emit()
+        self.chart_update.emit()
 
     def refresh_logs(self):
         self.logs_update.emit()
@@ -178,4 +178,6 @@ class DataManager(QObject):
 
     def set_chart(self, chart_data):
         self.chart_data = chart_data
+        self.refresh_chart()
+        print(chart_data)
 

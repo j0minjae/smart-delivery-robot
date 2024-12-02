@@ -187,7 +187,7 @@ class MainWindow(QMainWindow):
         self.data_manager.tables_update.connect(self.render_tables)
         self.data_manager.tickets_update.connect(self.render_tickets)
         self.data_manager.logs_update.connect(self.render_logs)
-        self.data_manager.chart_update.connect
+        self.data_manager.chart_update.connect(self.render_chart)
 
         self.ui.serve_btn.clicked.connect(self.on_serve_button_click)
         self.ui.call_btn.clicked.connect(self.on_call_button_click)
@@ -272,6 +272,7 @@ class MainWindow(QMainWindow):
         self.ui.stackedWidget.setCurrentIndex(self.page)
 
     def on_chart_page_button_click(self):
+        self.data_manager.emit_chart_signal()
         self.page = 1
         self.ui.stackedWidget.setCurrentIndex(self.page)
          

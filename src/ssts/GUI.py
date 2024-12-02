@@ -34,6 +34,7 @@ class gui(Node):
 
         self.data_manager.robot_serve_update.connect(self.move_to_table)
         self.data_manager.log_signal.connect(self.kitchen_display_emit_log)
+        self.data_manager.chart_signal.connect(self.provide_chart_data)
 
         self.order_service = self.create_service(PlaceOrder,'/order', qos_profile=self.qos_profile, callback=self.order_callback)
         self.log_sub = self.create_subscription(Log, '/rosout', self.log_callback, self.qos_profile)
@@ -156,6 +157,22 @@ class gui(Node):
         get_result_future = goal_handle.get_result_async()
         get_result_future.add_done_callback(self.get_result_callback)
 
+    def get_sales_data(self):
+        a, b = self.db.generate_sales_graph()
+        c = self.db.generate_menu_sales_graph()
+        
+        if a == False:
+            self.get_logger().info("주차별 매출 데이터가 충분히 쌓이지 않았습니다.")
+        if b == False:
+            self.get_logger().info("월별 매출 데이터가 충분히 쌓이지 않았습니다.")
+        if c == False:
+            self.get_logger().info("메뉴별 매출 데이터가 충분히 쌓이지 않았습니다.")
+        return a, b, c
+    
+    def provide_chart_data(self):
+        a,b,c = self.get_sales_data()
+        self.data_manager.set_chart({"week":a,"month":b,"menu":c})
+    
     def get_result_callback(self, future):
         result = future.result()
         if result.status == 4:  # STATUS_SUCCEEDED
