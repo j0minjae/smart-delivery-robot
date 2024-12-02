@@ -101,7 +101,6 @@ class TicketManager(QObject):
         
         if is_all_menu_disable:
             self.is_disable = True
-            self.timer.stop()
         self.update_ticket()
 
     def get_is_checked_menu_and_table_id(self):
