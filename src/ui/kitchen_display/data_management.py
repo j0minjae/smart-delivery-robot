@@ -4,6 +4,15 @@ from DTO import MenuItem, OrderTicket, TableInfo
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget
 from PyQt5.QtCore import QFile, QTextStream, Qt, QObject, pyqtSignal
 
+menu_price_map = {
+    1: 130000,
+    2: 12000,
+    3: 14000,
+    4: 13000,
+    5: 9000,
+    6: 15000,
+}
+
 
 class TableManager(QObject):
     table_update = pyqtSignal()
@@ -125,6 +134,7 @@ class DataManager(QObject):
             menu.is_checked = False
             menu.is_disable = False
         self.tickets.insert(0, TicketManager(ticket))
+
         self.refresh_tickets()
 
     def create_order(self,ticket:OrderTicket):
@@ -132,9 +142,12 @@ class DataManager(QObject):
         
         for table_manager in self.tables:
             if table_manager.model.table_id == ticket.table_id:
-                new_ticket = copy.deepcopy(table_manager.model)
-                new_ticket.order.extend(ticket.order)
-                table_manager.update_table(new_ticket)
+                new_table = copy.deepcopy(table_manager.model)
+                new_table.order.extend(ticket.order)
+                for menu in ticket.order:
+                    new_table.payment += menu_price_map[menu.menu_id] * menu.quantity
+
+                table_manager.update_table(new_table)
         self.emit_log(f"New Order has been created")
 
     def serve_checked_menu(self):

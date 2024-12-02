@@ -14,6 +14,15 @@ from .widgets.table_info_ui import Ui_Form as Ui_Table_Info
 from PyQt5.QtChart import QChart, QChartView, QBarSet, QBarSeries, QBarCategoryAxis, QValueAxis
 from PyQt5.QtGui import QPainter
 
+menu_item_map = {
+    1: "히레카츠",
+    2: "로스카츠",
+    3: "고구마치즈돈까스",
+    4: "치즈카츠",
+    5: "왕돈까스",
+    6: "모둠돈까스",
+}
+
 class SingleOrder:
     def __init__(self, menu_id, quantity):
         self.menu_id = menu_id
@@ -41,7 +50,7 @@ class OrderLabel(QWidget):
     def update_widget(self):
         self.checkbox.setChecked(self.menu.is_checked)
         self.setDisabled(self.menu.is_disable)
-        self.set_description(f"{self.menu.menu_id} X {self.menu.quantity}")
+        self.set_description(f"{menu_item_map[self.menu.menu_id]} X {self.menu.quantity}")
 
     def on_checkbox_toggled(self):
         self.menu.is_checked = self.checkbox.isChecked()
@@ -80,7 +89,7 @@ class TableInfoWidget(QWidget):
         self.clear_order_layout()
 
         for menu in order:
-            menu_label = QLabel(f"{menu.menu_id} X {menu.quantity}")
+            menu_label = QLabel(f"{menu_item_map[menu.menu_id]} X {menu.quantity}")
             self.order_layout.addWidget(menu_label)
 
     def update_widget(self):
@@ -249,6 +258,11 @@ class MainWindow(QMainWindow):
         
         week_data, month_data, menu_data = data['week'], data['month'], data['menu']
         
+        menu_data = [(menu_item_map[item[0]], item[1]) for item in menu_data]
+        
+        week = ["일","월", "화", "수","목","금","토"]
+        week_data = [(week[i], item[1]) for i, item in enumerate(week_data)]
+
         week_chart = self.make_chart("week",week_data)
         month_chart = self.make_chart("month",month_data)
         menu_chart = self.make_chart("menu",menu_data)
