@@ -1,5 +1,34 @@
 # serving-bot
 
+## 프로젝트 개요
+스마트 딜리버리 로봇은 ROS2를 기반으로 자율주행과 음식 배달 기능을 수행하는 서비스 로봇 개발 프로젝트입니다.
+식당 환경을 간단하게 묘사한 시뮬레이션에서 TutleBot로봇이 정화하게 경로를 따라가고 장애물을 회피합니다.
+
+## 주요 역할 및 기여
+- ROS2 s
+
+## 사용 기술
+- Python, ROS2 Humble  
+- OpenCV, YOLOv8,SQLite 
+- Git, GitHub
+
+## 사용 기술
+- Python, ROS2 Humble  
+- OpenCV, YOLOv8, Deep SORT  
+- Git, GitHub
+  
+## 결과 및 성과
+- 장애물 인식 정확도 90% 이상 달성  
+- 시뮬레이션 환경에서 안정적 경로 주행 성공  
+- 실시간 원격 모니터링 시스템 구축
+
+## 향후 계획
+- 멀티로봇 협업 기능 추가
+
+## 참고 자료
+- [ROS2 공식 문서](https://docs.ros.org/en/rolling/)
+- [Gazebo 공식 문서](
+  
 ## Quick Start
 #### interface build and apply
 ```bash
